@@ -1,0 +1,22 @@
+{
+  "name": "atlas-database-creator",
+  "version": "1.0.0",
+  "description": "MongoDB Atlas connection string과 데이터베이스 이름을 입력받아 데이터베이스를 생성하는 예제",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "mongodb",
+    "atlas",
+    "database"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "mongodb": "^6.3.0",
+    "express": "^4.18.2"
+  }
+}
+
