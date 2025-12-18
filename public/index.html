@@ -291,7 +291,10 @@
                 <p class="help-text">샘플 데이터를 로딩할 데이터베이스 이름을 입력하세요.</p>
             </div>
 
-            <button type="submit" id="submitBtn">샘플 데이터 로딩</button>
+            <div style="margin-top: 20px;">
+                <button type="submit" id="submitBtn" style="width: 100%;">샘플 데이터 로딩</button>
+                <button type="button" id="goToExamplesBtn" style="width: 100%; margin-top: 12px; background: rgba(0, 237, 100, 0.2); border: 1px solid rgba(0, 237, 100, 0.4); color: #00ED64;">디버깅 예제 보기</button>
+            </div>
         </form>
 
         <div class="loading" id="loading">
@@ -314,12 +317,12 @@
                 </div>
             </div>
             <div id="successActions" style="display: none; margin-top: 20px;">
-                <button type="button" id="goToExamplesBtn" style="margin-top: 12px;">디버깅 예제 보기</button>
             </div>
         </div>
     </div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
         const form = document.getElementById('databaseForm');
         const submitBtn = document.getElementById('submitBtn');
         const loading = document.getElementById('loading');
@@ -440,8 +443,22 @@
         });
 
         // 디버깅 예제 페이지로 이동 버튼
-        goToExamplesBtn.addEventListener('click', () => {
-            window.location.href = '/examples.html';
+        if (goToExamplesBtn) {
+            goToExamplesBtn.addEventListener('click', () => {
+                // 연결 정보를 localStorage에 저장 (입력 필드에서 가져오기)
+                const connectionString = document.getElementById('connectionString').value.trim();
+                const dbName = document.getElementById('dbName').value.trim();
+                if (connectionString && dbName) {
+                    try {
+                        localStorage.setItem('atlasDemoConnectionString', connectionString);
+                        localStorage.setItem('atlasDemoDbName', dbName);
+                    } catch (e) {
+                        console.error('localStorage 저장 실패:', e);
+                    }
+                }
+                window.location.href = '/examples.html';
+            });
+        }
         });
     </script>
 </body>

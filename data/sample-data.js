@@ -1,5 +1,101 @@
 // 한글 위주 샘플 데이터 생성 스크립트
 
+// 대량 샘플 데이터 생성 함수
+export function generateLargeSampleData() {
+  const categories = ["스마트폰", "노트북", "태블릿", "TV", "이어폰", "가전제품", "스마트워치", "게이밍", "카메라", "오디오"];
+  const brands = ["삼성", "애플", "LG", "소니", "샤오미", "화웨이", "레노버", "아수스", "델", "HP"];
+  const productNames = [
+    "갤럭시", "아이폰", "맥북", "아이패드", "올레드", "비스포크", "에어팟", "버즈", "워치", "탭",
+    "프로", "울트라", "플러스", "맥스", "미니", "에어", "프로맥스", "S24", "15", "M3"
+  ];
+  const descriptions = [
+    "최신 기술이 탑재된 프리미엄 제품입니다.",
+    "고성능과 우수한 디자인을 갖춘 제품입니다.",
+    "일상 생활에 최적화된 스마트 기기입니다.",
+    "프로페셔널한 사용자를 위한 고급 제품입니다.",
+    "혁신적인 기능과 뛰어난 사용성을 제공합니다.",
+    "최고의 품질과 성능을 자랑하는 제품입니다.",
+    "현대적인 디자인과 강력한 기능을 갖춘 제품입니다.",
+    "사용자 경험을 최우선으로 설계된 제품입니다."
+  ];
+  const tags = [
+    ["프리미엄", "AI", "카메라", "배터리"],
+    ["고성능", "디자인", "스타일", "품질"],
+    ["스마트", "편리함", "효율", "혁신"],
+    ["프로", "전문가", "크리에이터", "개발자"],
+    ["무선", "방수", "배터리", "착용감"],
+    ["4K", "HDR", "스마트TV", "화질"],
+    ["대용량", "에너지효율", "AI", "편의성"]
+  ];
+
+  const products = [];
+  const articles = [];
+
+  // Products 생성 (100,000건)
+  for (let i = 1; i <= 100000; i++) {
+    const category = categories[Math.floor(Math.random() * categories.length)];
+    const brand = brands[Math.floor(Math.random() * brands.length)];
+    const namePart1 = productNames[Math.floor(Math.random() * productNames.length)];
+    const namePart2 = productNames[Math.floor(Math.random() * productNames.length)];
+    const name = `${brand} ${namePart1} ${namePart2} ${i % 100 === 0 ? '프로' : ''} ${i % 50 === 0 ? '울트라' : ''}`.trim();
+    
+    products.push({
+      _id: i,
+      name: name,
+      description: descriptions[Math.floor(Math.random() * descriptions.length)] + ` ${category} 카테고리의 인기 제품입니다.`,
+      category: category,
+      brand: brand,
+      price: Math.floor(Math.random() * 5000000) + 100000, // 100,000 ~ 5,100,000
+      tags: tags[Math.floor(Math.random() * tags.length)],
+      specifications: {
+        storage: `${Math.floor(Math.random() * 1000) + 128}GB`,
+        ram: `${Math.floor(Math.random() * 32) + 4}GB`,
+        display: `${Math.floor(Math.random() * 10) + 5}.${Math.floor(Math.random() * 10)}인치`,
+        color: ["블랙", "화이트", "실버", "골드", "블루", "레드"][Math.floor(Math.random() * 6)]
+      },
+      inStock: Math.random() > 0.2, // 80% 재고 있음
+      rating: Math.round((Math.random() * 1.5 + 3.5) * 10) / 10 // 3.5 ~ 5.0
+    });
+  }
+
+  // Articles 생성 (30,000건)
+  const articleTitles = [
+    "MongoDB Atlas Search 완벽 가이드",
+    "한글 검색 최적화 전략",
+    "Atlas Search 디버깅 실전 가이드",
+    "검색 성능 튜닝 방법",
+    "인덱스 설계 베스트 프랙티스",
+    "실무 검색 쿼리 최적화",
+    "대용량 데이터 검색 전략",
+    "검색 결과 랭킹 개선",
+    "멀티 필드 검색 구현",
+    "검색 분석 및 모니터링"
+  ];
+  const articleCategories = ["데이터베이스", "검색", "디버깅", "최적화", "튜토리얼", "실전", "가이드", "전략"];
+  const authors = ["김개발", "이데이터", "박튜닝", "최최적화", "정검색", "강인덱스", "윤성능", "임디버깅"];
+
+  for (let i = 1; i <= 30000; i++) {
+    const titleIndex = Math.floor(Math.random() * articleTitles.length);
+    const baseTitle = articleTitles[titleIndex];
+    const title = i % 10 === 0 ? `${baseTitle} ${Math.floor(i / 1000)}편` : baseTitle;
+    
+    articles.push({
+      _id: i,
+      title: title,
+      content: `${title}에 대한 상세한 내용입니다. 실무에서 활용할 수 있는 구체적인 예제와 코드를 포함하고 있습니다. ${i}번째 문서로 다양한 시나리오를 다룹니다.`,
+      author: authors[Math.floor(Math.random() * authors.length)],
+      category: articleCategories[Math.floor(Math.random() * articleCategories.length)],
+      tags: ["MongoDB", "Atlas", "Search", "튜토리얼", "최적화", "디버깅"].slice(0, Math.floor(Math.random() * 4) + 2),
+      publishedDate: new Date(2024, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1),
+      views: Math.floor(Math.random() * 10000) + 100,
+      likes: Math.floor(Math.random() * 500) + 10
+    });
+  }
+
+  return { products, articles };
+}
+
+// 기존 샘플 데이터 (호환성을 위해 유지)
 export const sampleProducts = [
   {
     _id: 1,

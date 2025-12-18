@@ -2,7 +2,7 @@ import express from 'express';
 import { MongoClient } from 'mongodb';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { sampleProducts, sampleArticles } from './data/sample-data.js';
+import { sampleProducts, sampleArticles, generateLargeSampleData } from './data/sample-data.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,6 +15,77 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // API 라우트는 정적 파일 서빙보다 먼저 처리
+
+// 연결 테스트 API 엔드포인트
+app.post('/api/test-connection', async (req, res) => {
+  const { connectionString, dbName } = req.body;
+
+  // 입력 검증
+  if (!connectionString || connectionString.trim() === '') {
+    return res.status(400).json({
+      success: false,
+      error: '연결 문자열이 입력되지 않았습니다.'
+    });
+  }
+
+  if (!dbName || dbName.trim() === '') {
+    return res.status(400).json({
+      success: false,
+      error: '데이터베이스 이름이 입력되지 않았습니다.'
+    });
+  }
+
+  let client;
+  try {
+    // MongoDB 클라이언트 생성 및 연결 테스트
+    client = new MongoClient(connectionString, {
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 5000
+    });
+    
+    await client.connect();
+    
+    // 데이터베이스 접근 테스트
+    const db = client.db(dbName);
+    await db.admin().ping();
+    
+    // 연결 종료
+    await client.close();
+
+    res.json({
+      success: true,
+      message: '연결 테스트 성공'
+    });
+  } catch (error) {
+    // 연결이 열려있으면 닫기
+    if (client) {
+      try {
+        await client.close();
+      } catch (closeError) {
+        console.error('연결 종료 중 오류:', closeError);
+      }
+    }
+
+    let errorMessage = error.message;
+    let errorHint = '';
+
+    if (error.message.includes('authentication')) {
+      errorHint = '연결 문자열의 사용자 이름과 비밀번호를 확인하세요.';
+    } else if (error.message.includes('network') || error.message.includes('ENOTFOUND')) {
+      errorHint = '네트워크 연결을 확인하고 IP 주소가 Atlas 화이트리스트에 추가되어 있는지 확인하세요.';
+    } else if (error.message.includes('timeout')) {
+      errorHint = '연결 시간이 초과되었습니다. 네트워크 연결과 Atlas 클러스터 상태를 확인하세요.';
+    } else {
+      errorHint = '연결 문자열 형식과 Atlas 클러스터 설정을 확인하세요.';
+    }
+
+    res.status(500).json({ 
+      success: false, 
+      error: errorMessage, 
+      hint: errorHint 
+    });
+  }
+});
 
 // 샘플 데이터 로딩 API 엔드포인트
 app.post('/api/load-sample-data', async (req, res) => {
@@ -58,11 +129,46 @@ app.post('/api/load-sample-data', async (req, res) => {
       }
     }
 
-    // 샘플 데이터 삽입
-    console.log('샘플 데이터 삽입 중...');
+    // 시나리오 1, 2용 기존 샘플 데이터 삽입 (products, articles)
+    console.log('시나리오 1, 2용 샘플 데이터 삽입 중...');
     const productsResult = await db.collection('products').insertMany(sampleProducts);
     const articlesResult = await db.collection('articles').insertMany(sampleArticles);
-    console.log(`샘플 데이터 삽입 완료 (products: ${productsResult.insertedCount}개, articles: ${articlesResult.insertedCount}개)`);
+    console.log(`시나리오 1, 2용 데이터 삽입 완료 (products: ${productsResult.insertedCount}개, articles: ${articlesResult.insertedCount}개)`);
+
+    // 시나리오 3용 대량 샘플 데이터 생성 및 삽입 (bigProducts, bigArticles)
+    console.log('시나리오 3용 대량 샘플 데이터 생성 중... (10만 건 이상)');
+    const { products, articles } = generateLargeSampleData();
+    console.log(`생성 완료: bigProducts ${products.length}건, bigArticles ${articles.length}건`);
+    
+    console.log('시나리오 3용 대량 데이터 삽입 중... (배치 처리)');
+    
+    // 배치 크기 설정 (한 번에 1000건씩 삽입)
+    const batchSize = 1000;
+    let bigProductsInserted = 0;
+    let bigArticlesInserted = 0;
+    
+    // bigProducts 배치 삽입
+    for (let i = 0; i < products.length; i += batchSize) {
+      const batch = products.slice(i, i + batchSize);
+      const result = await db.collection('bigProducts').insertMany(batch);
+      bigProductsInserted += result.insertedCount;
+      if ((i + batchSize) % 10000 === 0 || i + batchSize >= products.length) {
+        console.log(`bigProducts 삽입 진행: ${bigProductsInserted}/${products.length}건`);
+      }
+    }
+    
+    // bigArticles 배치 삽입
+    for (let i = 0; i < articles.length; i += batchSize) {
+      const batch = articles.slice(i, i + batchSize);
+      const result = await db.collection('bigArticles').insertMany(batch);
+      bigArticlesInserted += result.insertedCount;
+      if ((i + batchSize) % 5000 === 0 || i + batchSize >= articles.length) {
+        console.log(`bigArticles 삽입 진행: ${bigArticlesInserted}/${articles.length}건`);
+      }
+    }
+    
+    console.log(`시나리오 3용 데이터 삽입 완료 (bigProducts: ${bigProductsInserted}개, bigArticles: ${bigArticlesInserted}개, 총: ${bigProductsInserted + bigArticlesInserted}개)`);
+    console.log(`전체 데이터 삽입 완료 (시나리오 1,2: products ${productsResult.insertedCount}개, articles ${articlesResult.insertedCount}개 / 시나리오 3: bigProducts ${bigProductsInserted}개, bigArticles ${bigArticlesInserted}개)`);
 
     // 샘플 데이터 조회 (각 컬렉션에서 3개씩) - 연결 종료 전에 수행
     const sampleProductsData = await db.collection('products').find({}).limit(3).toArray();
@@ -73,10 +179,12 @@ app.post('/api/load-sample-data', async (req, res) => {
 
     res.json({
       success: true,
-      message: `샘플 데이터 로딩 완료 (products: ${productsResult.insertedCount}개, articles: ${articlesResult.insertedCount}개).`,
+      message: `샘플 데이터 로딩 완료 (시나리오 1,2: products ${productsResult.insertedCount}개, articles ${articlesResult.insertedCount}개 / 시나리오 3: bigProducts ${bigProductsInserted}개, bigArticles ${bigArticlesInserted}개).`,
       counts: {
         products: productsResult.insertedCount,
-        articles: articlesResult.insertedCount
+        articles: articlesResult.insertedCount,
+        bigProducts: bigProductsInserted,
+        bigArticles: bigArticlesInserted
       },
       sampleData: {
         products: sampleProductsData,
