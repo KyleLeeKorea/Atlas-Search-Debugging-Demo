@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atlas Search 디버깅 예제</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Euclid Circular A', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #001E2B;
+            color: #FFFFFF;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: #B8C5D1;
+            margin-bottom: 40px;
+            font-size: 16px;
+        }
+
+        .connection-form {
+            background: rgba(26, 26, 26, 0.8);
+            border: 1px solid rgba(0, 237, 100, 0.2);
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 30px;
+        }
+
+        .connection-form input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #FFFFFF;
+            font-size: 14px;
+            margin: 8px 0;
+        }
+
+        .connection-form input:focus {
+            outline: none;
+            border-color: #00ED64;
+        }
+
+        .connection-form label {
+            display: block;
+            margin-top: 12px;
+            font-size: 14px;
+            color: #FFFFFF;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: #B8C5D1;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            color: #FFFFFF;
+        }
+
+        .tab.active {
+            color: #00ED64;
+            border-bottom-color: #00ED64;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .scenario {
+            background: rgba(26, 26, 26, 0.8);
+            border: 1px solid rgba(0, 237, 100, 0.2);
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .scenario h2 {
+            font-size: 20px;
+            margin-bottom: 16px;
+            color: #00ED64;
+        }
+
+        .scenario h3 {
+            font-size: 16px;
+            margin-top: 20px;
+            margin-bottom: 12px;
+            color: #FFFFFF;
+        }
+
+        .problem-box {
+            background: rgba(255, 82, 82, 0.1);
+            border: 1px solid rgba(255, 82, 82, 0.3);
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+
+        .solution-box {
+            background: rgba(0, 237, 100, 0.1);
+            border: 1px solid rgba(0, 237, 100, 0.3);
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+
+        .code-block {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 16px;
+            margin: 12px 0;
+            overflow-x: auto;
+            font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            color: #B8C5D1;
+            position: relative;
+        }
+
+        .code-block code {
+            white-space: pre;
+        }
+
+        .execute-btn {
+            background: #00ED64;
+            color: #001E2B;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 12px;
+            transition: all 0.2s;
+        }
+
+        .execute-btn:hover {
+            background: #00D955;
+            transform: translateY(-1px);
+        }
+
+        .execute-btn:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.3);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 16px;
+            margin: 12px 0;
+            display: none;
+        }
+
+        .result-box.show {
+            display: block;
+        }
+
+        .result-box.success {
+            border-color: rgba(0, 237, 100, 0.3);
+        }
+
+        .result-box.error {
+            border-color: rgba(255, 82, 82, 0.3);
+        }
+
+        .result-box pre {
+            color: #B8C5D1;
+            font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin: 8px 0;
+        }
+
+        .result-box .result-header {
+            color: #00ED64;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .result-box.error .result-header {
+            color: #FF5252;
+        }
+
+        .checklist {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .checklist li {
+            padding: 8px 0;
+            padding-left: 24px;
+            position: relative;
+        }
+
+        .checklist li:before {
+            content: "□";
+            position: absolute;
+            left: 0;
+            color: #00ED64;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #00ED64;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        p {
+            margin: 12px 0;
+            color: #B8C5D1;
+        }
+
+        strong {
+            color: #FFFFFF;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #00ED64;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .footer-link {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            text-decoration: none;
+            z-index: 1000;
+            transition: color 0.2s ease;
+        }
+
+        .footer-link:hover {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .footer-link {
+                font-size: 9px;
+                top: 8px;
+                right: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="https://github.com/KyleLeeKorea/Atlas-Search-Debugging-Demo" target="_blank" class="footer-link">
+        https://github.com/KyleLeeKorea/Atlas-Search-Debugging-Demo , Created by Kyle Lee, 20251218
+    </a>
+    <div class="container">
+        <a href="/" class="back-link">← 메인으로 돌아가기</a>
+        
+        <h1>Atlas Search 디버깅 예제</h1>
+        <p class="subtitle">가장 흔한 디버깅 시나리오 Top 5와 실전 예제</p>
+
+        <div class="connection-form">
+            <h3 style="color: #00ED64; margin-bottom: 16px;">연결 정보</h3>
+            <label>MongoDB Atlas 연결 문자열</label>
+            <textarea id="connectionString" rows="2" placeholder="mongodb+srv://username:password@cluster.mongodb.net/" style="width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; color: #FFFFFF; font-size: 14px; font-family: 'SF Mono', 'Monaco', 'Courier New', monospace; resize: vertical;"></textarea>
+            <label>데이터베이스 이름</label>
+            <input type="text" id="dbName" placeholder="atlas_search_demo" />
+            <p style="margin-top: 12px; font-size: 13px; color: #7A8B99;">
+                메인 페이지에서 샘플 데이터를 로딩한 경우, 연결 정보가 자동으로 채워집니다.
+            </p>
+            <div id="connectionStatus" style="margin-top: 12px; padding: 12px; border-radius: 6px; display: none;"></div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab(0)">시나리오 1: 검색 결과 0건</button>
+            <button class="tab" onclick="showTab(1)">시나리오 2: 기대와 다른 결과</button>
+            <button class="tab" onclick="showTab(2)">시나리오 3: 성능 문제</button>
+            <button class="tab" onclick="showTab(3)">시나리오 4: Index 변경</button>
+            <button class="tab" onclick="showTab(4)">시나리오 5: 운영 환경</button>
+            <button class="tab" onclick="showTab(5)">체크리스트</button>
+        </div>
+
+        <!-- 시나리오 1: 검색 결과가 0건 나오는 경우 -->
+        <div class="tab-content active">
+            <div class="scenario">
+                <h2>시나리오 1: 검색 결과가 0건 나오는 경우</h2>
+                
+                <h3>문제 1: Index가 없는 경우</h3>
+                <div class="problem-box">
+                    <p><strong>증상:</strong> Index 'productSearch' not found 오류</p>
+                    <div class="code-block">
+                        <code>{
+  $search: {
+    index: "productSearch",
+    text: { query: "갤럭시", path: "name" }
+  }
+}</code>
+                    </div>
+                    <button class="execute-btn" onclick="executeQuery('scenario1-1')">쿼리 실행</button>
+                    <div class="result-box" id="result-scenario1-1"></div>
+                </div>
+                <div class="solution-box">
+                    <p><strong>해결 방법 1:</strong> Index 목록 확인</p>
+                    <div class="code-block">
+                        <code>// Index 목록 확인
+db.products.getSearchIndexes()</code>
+                    </div>
+                    <button class="execute-btn" onclick="executeGetIndexes('products')">Index 목록 조회</button>
+                    <div class="result-box" id="result-indexes-products"></div>
+                </div>
+                <div class="solution-box" style="margin-top: 20px;">
+                    <p><strong>해결 방법 2:</strong> Index 생성 (Index가 없는 경우)</p>
+                    <p style="color: #B8C5D1; font-size: 14px; margin: 12px 0;">MongoDB Atlas UI에서 Search Index를 생성하세요:</p>
+                    <ol style="color: #B8C5D1; font-size: 14px; margin: 12px 0; padding-left: 20px;">
+                        <li>MongoDB Atlas 콘솔에 로그인</li>
+                        <li>왼쪽 메뉴에서 <strong>Search</strong> 클릭</li>
+                        <li><strong>Create Search Index</strong> 버튼 클릭</li>
+                        <li><strong>JSON Editor</strong> 선택</li>
+                        <li>아래 JSON을 복사하여 붙여넣기:</li>
+                    </ol>
+                    <div class="code-block">
+                        <code>{
+  "mappings": {
+    "dynamic": false,
+    "fields": {
+      "name": {
+        "type": "string",
+        "analyzer": "lucene.korean"
+      },
+      "description": {
+        "type": "string",
+        "analyzer": "lucene.korean"
+      },
+      "category": {
+        "type": "string",
+        "analyzer": "lucene.keyword"
+      },
+      "price": {
+        "type": "number"
+      }
+    }
+  }
+}</code>
+                    </div>
+                    <p style="color: #B8C5D1; font-size: 14px; margin: 12px 0;">
+                        <strong>Index 이름:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">productSearch</code>
+                    </p>
+                    <p style="color: #B8C5D1; font-size: 14px; margin: 12px 0;">
+                        <strong>Database:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">Debug01</code> (또는 사용 중인 데이터베이스 이름)
+                    </p>
+                    <p style="color: #B8C5D1; font-size: 14px; margin: 12px 0;">
+                        <strong>Collection:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">products</code>
+                    </p>
+                    <p style="color: #B8C5D1; font-size: 13px; margin-top: 12px; padding: 12px; background: rgba(0, 150, 255, 0.1); border-left: 3px solid #0096FF; border-radius: 4px;">
+                        💡 <strong>참고:</strong> Index 생성 후 BUILDING 상태에서 READY 상태로 변경되는데 몇 분이 걸릴 수 있습니다. READY 상태가 되면 쿼리를 실행할 수 있습니다.
+                    </p>
+                    <button class="execute-btn" onclick="checkIndexStatus('products', 'productSearch')" style="margin-top: 16px;">인덱스 생성 확인</button>
+                    <div class="result-box" id="result-indexes-products-check"></div>
+                </div>
+
+                <h3>문제 2: $searchMeta로 매칭 확인</h3>
+                <div class="solution-box">
+                    <p><strong>디버깅:</strong> $searchMeta로 검색 매칭 여부 확인</p>
+                    <div class="code-block">
+                        <code>db.products.aggregate([
+  {
+    $searchMeta: {
+      index: "productSearch",
+      text: { query: "갤럭시", path: "name" }
+    }
+  }
+])</code>
+                    </div>
+                    <button class="execute-btn" onclick="executeQuery('scenario1-2')">$searchMeta 실행</button>
+                    <div class="result-box" id="result-scenario1-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 시나리오 2: 결과는 나오지만 기대와 다른 경우 -->
+        <div class="tab-content">
+            <div class="scenario">
+                <h2>시나리오 2: 결과는 나오지만 기대와 다른 경우</h2>
+                
+                <h3>문제 1: text vs autocomplete vs phrase 차이</h3>
+                <div class="problem-box">
+                    <p><strong>차이점:</strong></p>
+                    <ul>
+                        <li><strong>text:</strong> 갤럭시와 프로를 각각 검색 (OR 조건)</li>
+                        <li><strong>autocomplete:</strong> 갤럭시로 시작하는 단어 검색</li>
+                        <li><strong>phrase:</strong> 갤럭시 프로를 정확한 구문으로 검색</li>
+                    </ul>
+                </div>
+                <div class="solution-box">
+                    <p><strong>text 검색:</strong></p>
+                    <div class="code-block">
+                        <code>db.products.aggregate([
+  {
+    $search: {
+      index: "productSearch",
+      text: { query: "갤럭시 프로", path: "name" }
+    }
+  },
+  { $limit: 5 }
+])</code>
+                    </div>
+                    <button class="execute-btn" onclick="executeQuery('scenario2-1-text')">text 검색 실행</button>
+                    <div class="result-box" id="result-scenario2-1-text"></div>
+                </div>
+
+                <h3>문제 2: Score 확인</h3>
+                <div class="solution-box">
+                    <p><strong>디버깅:</strong> Score 기준 정렬로 관련도 확인</p>
+                    <div class="code-block">
+                        <code>db.products.aggregate([
+  {
+    $search: {
+      index: "productSearch",
+      text: { query: "갤럭시", path: "name" }
+    }
+  },
+  {
+    $addFields: {
+      score: { $meta: "searchScore" }
+    }
+  },
+  {
+    $sort: { score: -1 }
+  },
+  { $limit: 5 }
+])</code>
+                    </div>
+                    <button class="execute-btn" onclick="executeQuery('scenario2-2')">Score 확인 실행</button>
+                    <div class="result-box" id="result-scenario2-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 시나리오 3: 성능이 느린 경우 -->
+        <div class="tab-content">
+            <div class="scenario">
+                <h2>시나리오 3: 성능이 느린 경우</h2>
+                
+                <h3>문제 1: 단순 검색 쿼리</h3>
+                <div class="solution-box">
+                    <p><strong>성능 측정:</strong> 단순 검색 쿼리 실행 시간 확인</p>
+                    <div class="code-block">
+                        <code>db.products.aggregate([
+  {
+    $search: {
+      index: "productSearch",
+      text: { query: "갤럭시", path: "name" }
+    }
+  },
+  { $limit: 10 }
+])</code>
+                    </div>
+                    <button class="execute-btn" onclick="executeQuery('scenario3-1')">성능 측정 실행</button>
+                    <div class="result-box" id="result-scenario3-1"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 시나리오 4: Index 변경 -->
+        <div class="tab-content">
+            <div class="scenario">
+                <h2>시나리오 4: Index 변경 후 결과가 이상한 경우</h2>
+                
+                <h3>문제 1: Index Status 확인</h3>
+                <div class="solution-box">
+                    <p><strong>디버깅:</strong> Index Status 확인 (BUILDING / READY / FAILED)</p>
+                    <div class="code-block">
+                        <code>db.products.getSearchIndexes()</code>
+                    </div>
+                    <button class="execute-btn" onclick="executeGetIndexes('products')">Index Status 확인</button>
+                    <div class="result-box" id="result-scenario4-1"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 시나리오 5: 운영 환경 -->
+        <div class="tab-content">
+            <div class="scenario">
+                <h2>시나리오 5: 운영 환경에서만 발생하는 문제</h2>
+                
+                <h3>데이터 확인</h3>
+                <div class="solution-box">
+                    <p><strong>데이터 확인:</strong> 샘플 데이터 확인</p>
+                    <div class="code-block">
+                        <code>db.products.find().limit(5)</code>
+                    </div>
+                    <button class="execute-btn" onclick="executeFind('products', {})">데이터 확인</button>
+                    <div class="result-box" id="result-scenario5-1"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 체크리스트 -->
+        <div class="tab-content">
+            <div class="scenario">
+                <h2>디버깅 체크리스트</h2>
+                
+                <h3>기본 확인 사항</h3>
+                <ul class="checklist">
+                    <li>Index 존재 여부 확인: db.collection.getSearchIndexes()</li>
+                    <li>Index Status 확인 (BUILDING / READY / FAILED)</li>
+                    <li>Mapping vs 실제 데이터 구조 일치 여부</li>
+                    <li>Analyzer 확인</li>
+                    <li>$searchMeta 활용</li>
+                    <li>단순 쿼리부터 단계적 확장</li>
+                </ul>
+
+                <h3>유용한 디버깅 쿼리</h3>
+                <div class="code-block">
+                    <code>// Index 정보 확인
+db.collection.getSearchIndexes()
+
+// $searchMeta로 매칭 확인
+db.collection.aggregate([
+  {
+    $searchMeta: {
+      index: "indexName",
+      text: { query: "검색어", path: "fieldName" }
+    }
+  }
+])</code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // localStorage에서 연결 정보 불러오기
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedConnectionString = localStorage.getItem('atlasDemoConnectionString');
+            const savedDbName = localStorage.getItem('atlasDemoDbName');
+            
+            console.log('저장된 연결 정보:', { 
+                connectionString: savedConnectionString ? savedConnectionString.substring(0, 30) + '...' : '없음',
+                connectionStringLength: savedConnectionString ? savedConnectionString.length : 0,
+                dbName: savedDbName || '없음',
+                connectionStringValid: savedConnectionString ? (savedConnectionString.startsWith('mongodb://') || savedConnectionString.startsWith('mongodb+srv://')) : false
+            });
+            
+            const connectionStringInput = document.getElementById('connectionString');
+            const dbNameInput = document.getElementById('dbName');
+            const statusDiv = document.getElementById('connectionStatus');
+
+            if (savedConnectionString && connectionStringInput) {
+                connectionStringInput.value = savedConnectionString;
+                console.log('연결 문자열 입력 필드에 값 설정 완료:', {
+                    fieldValue: connectionStringInput.value.substring(0, 30),
+                    fieldValueLength: connectionStringInput.value.length
+                });
+                updateConnectionStatus(true, '연결 정보가 로드되었습니다.');
+            } else {
+                console.warn('저장된 연결 문자열이 없습니다.');
+                updateConnectionStatus(false, '⚠️ 연결 정보가 없습니다. 메인 페이지에서 샘플 데이터를 먼저 로딩하거나, 아래에 연결 정보를 직접 입력하세요.');
+            }
+            
+            if (savedDbName && dbNameInput) {
+                dbNameInput.value = savedDbName;
+                console.log('데이터베이스 이름 입력 필드에 값 설정 완료:', dbNameInput.value);
+            }
+
+            // 연결 정보가 없으면 안내 메시지 표시
+            if (!savedConnectionString || !savedDbName) {
+                updateConnectionStatus(false, '⚠️ 연결 정보가 없습니다. 메인 페이지에서 샘플 데이터를 먼저 로딩하거나, 아래에 연결 정보를 직접 입력하세요.');
+            }
+
+            // 입력 필드 변경 감지
+            if (connectionStringInput) {
+                connectionStringInput.addEventListener('input', () => {
+                    const value = connectionStringInput.value.trim();
+                    if (value && (value.startsWith('mongodb://') || value.startsWith('mongodb+srv://'))) {
+                        updateConnectionStatus(true, '연결 문자열 형식이 올바릅니다.');
+                        localStorage.setItem('atlasDemoConnectionString', value);
+                    } else if (value) {
+                        updateConnectionStatus(false, '연결 문자열은 mongodb:// 또는 mongodb+srv://로 시작해야 합니다.');
+                    } else {
+                        updateConnectionStatus(false, '연결 문자열을 입력하세요.');
+                    }
+                });
+            }
+
+            if (dbNameInput) {
+                dbNameInput.addEventListener('input', () => {
+                    const value = dbNameInput.value.trim();
+                    if (value) {
+                        localStorage.setItem('atlasDemoDbName', value);
+                    }
+                });
+            }
+        });
+
+        function updateConnectionStatus(isValid, message) {
+            const statusDiv = document.getElementById('connectionStatus');
+            if (!statusDiv) return;
+            
+            statusDiv.style.display = 'block';
+            statusDiv.style.background = isValid ? 'rgba(0, 237, 100, 0.1)' : 'rgba(255, 193, 7, 0.1)';
+            statusDiv.style.border = isValid ? '1px solid rgba(0, 237, 100, 0.3)' : '1px solid rgba(255, 193, 7, 0.3)';
+            statusDiv.style.color = isValid ? '#00ED64' : '#FFC107';
+            statusDiv.style.fontSize = '13px';
+            statusDiv.textContent = message;
+        }
+
+        function showTab(index) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach((tab, i) => {
+                if (i === index) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            contents.forEach((content, i) => {
+                if (i === index) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+        }
+
+        async function executeQuery(queryId) {
+            // 먼저 localStorage에서 연결 정보 확인
+            let connectionString = localStorage.getItem('atlasDemoConnectionString');
+            let dbName = localStorage.getItem('atlasDemoDbName');
+            
+            console.log('1. localStorage에서 읽은 값:', {
+                connectionString: connectionString ? connectionString.substring(0, 30) + '...' : '없음',
+                connectionStringLength: connectionString ? connectionString.length : 0,
+                dbName: dbName || '없음'
+            });
+            
+            // localStorage에 없으면 입력 필드에서 읽기
+            const connectionStringInput = document.getElementById('connectionString');
+            const dbNameInput = document.getElementById('dbName');
+            
+            if (!connectionString && connectionStringInput) {
+                connectionString = connectionStringInput.value.trim();
+                console.log('2. 입력 필드에서 읽은 값:', {
+                    connectionString: connectionString ? connectionString.substring(0, 30) + '...' : '없음',
+                    connectionStringLength: connectionString ? connectionString.length : 0
+                });
+            }
+            
+            if (!dbName && dbNameInput) {
+                dbName = dbNameInput.value.trim();
+            }
+            
+            // 최종적으로 사용할 연결 정보
+            connectionString = connectionString ? connectionString.trim() : '';
+            dbName = dbName ? dbName.trim() : '';
+            
+            const resultBox = document.getElementById(`result-${queryId}`);
+            
+            console.log('3. 최종 사용할 연결 정보:', { 
+                queryId, 
+                connectionStringExists: !!connectionString,
+                connectionStringLength: connectionString.length,
+                connectionStringPreview: connectionString ? connectionString.substring(0, 50) + '...' : '비어있음',
+                connectionStringStartsWith: connectionString ? (connectionString.startsWith('mongodb://') || connectionString.startsWith('mongodb+srv://')) : false,
+                dbName: dbName || '비어있음'
+            });
+            
+            // 연결 문자열 검증
+            if (!connectionString || connectionString === '') {
+                const errorMsg = '연결 문자열이 비어있습니다.';
+                const hintMsg = '연결 문자열을 찾을 수 없습니다.\n\n' +
+                    '해결 방법:\n' +
+                    '1. 메인 페이지(/)로 이동하여 샘플 데이터를 로딩하세요.\n' +
+                    '2. 또는 상단의 연결 정보 입력 폼에 MongoDB Atlas 연결 문자열을 직접 입력하세요.\n\n' +
+                    'localStorage 값: ' + (localStorage.getItem('atlasDemoConnectionString') ? '있음' : '없음') + '\n' +
+                    '입력 필드 값: ' + (connectionStringInput && connectionStringInput.value ? '있음' : '없음');
+                console.error('❌', errorMsg, { 
+                    localStorageValue: localStorage.getItem('atlasDemoConnectionString') ? '있음' : '없음',
+                    inputFieldValue: connectionStringInput ? connectionStringInput.value : '필드 없음'
+                });
+                showError(resultBox, errorMsg, hintMsg);
+                return;
+            }
+
+            if (!dbName || dbName === '') {
+                showError(resultBox, '데이터베이스 이름을 입력하세요.', '상단의 연결 정보 입력 폼에 데이터베이스 이름을 입력해주세요.');
+                return;
+            }
+
+            // 연결 문자열 형식 검증
+            if (!connectionString.startsWith('mongodb://') && !connectionString.startsWith('mongodb+srv://')) {
+                const errorMsg = '연결 문자열 형식이 올바르지 않습니다.';
+                const hintMsg = '연결 문자열은 mongodb:// 또는 mongodb+srv://로 시작해야 합니다.\n\n' +
+                    '현재 값의 시작 부분: "' + connectionString.substring(0, 50) + '"\n' +
+                    '전체 길이: ' + connectionString.length + '자';
+                console.error(errorMsg, { connectionString: connectionString.substring(0, 100) });
+                showError(resultBox, errorMsg, hintMsg);
+                return;
+            }
+
+            if (connectionString.includes('localhost') || connectionString.includes('127.0.0.1') || connectionString.includes(':28000')) {
+                const errorMsg = '연결 문자열에 localhost가 포함되어 있습니다.';
+                const hintMsg = 'MongoDB Atlas 연결 문자열을 사용해야 합니다.\n\n' +
+                    'localhost, 127.0.0.1, 또는 :28000이 포함된 연결 문자열은 사용할 수 없습니다.\n' +
+                    '현재 연결 문자열: ' + connectionString.substring(0, 100);
+                console.error(errorMsg, { connectionString: connectionString.substring(0, 100) });
+                showError(resultBox, errorMsg, hintMsg);
+                return;
+            }
+
+            resultBox.classList.remove('show', 'success', 'error');
+            resultBox.classList.add('show');
+            resultBox.innerHTML = `
+                <div class="result-header">실행 중...</div>
+                <div style="margin-top: 12px; padding: 12px; background: rgba(0, 0, 0, 0.3); border-radius: 4px; font-size: 12px; font-family: monospace;">
+                    <div style="color: #B8C5D1; margin-bottom: 4px;">연결 문자열:</div>
+                    <div style="color: #00ED64; word-break: break-all;">${connectionString.substring(0, 80)}...</div>
+                    <div style="color: #B8C5D1; margin-top: 8px;">데이터베이스: ${dbName}</div>
+                </div>
+                <div class="loading"></div>
+            `;
+
+            const queries = {
+                'scenario1-1': [
+                    {
+                        $search: {
+                            index: "productSearch",
+                            text: { query: "갤럭시", path: "name" }
+                        }
+                    },
+                    { $limit: 5 }
+                ],
+                'scenario1-2': [
+                    {
+                        $searchMeta: {
+                            index: "productSearch",
+                            text: { query: "갤럭시", path: "name" }
+                        }
+                    }
+                ],
+                'scenario2-1-text': [
+                    {
+                        $search: {
+                            index: "productSearch",
+                            text: { query: "갤럭시 프로", path: "name" }
+                        }
+                    },
+                    { $limit: 5 }
+                ],
+                'scenario2-2': [
+                    {
+                        $search: {
+                            index: "productSearch",
+                            text: { query: "갤럭시", path: "name" }
+                        }
+                    },
+                    {
+                        $addFields: {
+                            score: { $meta: "searchScore" }
+                        }
+                    },
+                    {
+                        $sort: { score: -1 }
+                    },
+                    { $limit: 5 }
+                ],
+                'scenario3-1': [
+                    {
+                        $search: {
+                            index: "productSearch",
+                            text: { query: "갤럭시", path: "name" }
+                        }
+                    },
+                    { $limit: 10 }
+                ]
+            };
+
+            try {
+                // 연결 문자열 최종 확인 - 더 엄격하게
+                const trimmedConnStr = connectionString.trim();
+                const trimmedDbName = dbName.trim();
+
+                console.log('최종 검증:', {
+                    connectionStringExists: !!trimmedConnStr,
+                    connectionStringLength: trimmedConnStr.length,
+                    connectionStringPrefix: trimmedConnStr.substring(0, 30),
+                    dbNameExists: !!trimmedDbName,
+                    dbName: trimmedDbName
+                });
+
+                if (!trimmedConnStr || trimmedConnStr === '') {
+                    console.error('연결 문자열이 비어있습니다.');
+                    showError(resultBox, '연결 문자열이 비어있습니다.', '상단의 연결 정보 입력 폼에 MongoDB Atlas 연결 문자열을 입력하세요.\n\n현재 입력 필드 값: "' + (connectionStringInput.value || '(비어있음)') + '"');
+                    return;
+                }
+
+                if (!trimmedConnStr.startsWith('mongodb://') && !trimmedConnStr.startsWith('mongodb+srv://')) {
+                    console.error('연결 문자열 형식이 잘못되었습니다:', trimmedConnStr.substring(0, 30));
+                    showError(resultBox, '연결 문자열 형식이 올바르지 않습니다.', '연결 문자열은 mongodb:// 또는 mongodb+srv://로 시작해야 합니다.\n\n현재 값의 시작 부분: "' + trimmedConnStr.substring(0, 50) + '"');
+                    return;
+                }
+
+                if (trimmedConnStr.includes('localhost') || trimmedConnStr.includes('127.0.0.1') || trimmedConnStr.includes(':28000')) {
+                    console.error('연결 문자열에 localhost가 포함되어 있습니다:', trimmedConnStr);
+                    showError(resultBox, '연결 문자열에 localhost가 포함되어 있습니다.', 'MongoDB Atlas 연결 문자열을 사용해야 합니다. localhost, 127.0.0.1, 또는 :28000이 포함된 연결 문자열은 사용할 수 없습니다.');
+                    return;
+                }
+
+            // 요청 본문 생성 전 최종 확인
+            if (!trimmedConnStr || trimmedConnStr === '' || trimmedConnStr.length < 20) {
+                console.error('❌ 연결 문자열이 없거나 너무 짧습니다:', {
+                    exists: !!trimmedConnStr,
+                    length: trimmedConnStr ? trimmedConnStr.length : 0,
+                    value: trimmedConnStr ? trimmedConnStr.substring(0, 50) : '없음'
+                });
+                showError(resultBox, '연결 문자열이 없거나 너무 짧습니다.', 
+                    '연결 문자열을 확인하세요.\n' +
+                    '길이: ' + (trimmedConnStr ? trimmedConnStr.length : 0) + '자\n' +
+                    '값: ' + (trimmedConnStr ? trimmedConnStr.substring(0, 50) : '없음'));
+                return;
+            }
+
+            // 연결 문자열 출력 및 확인
+            console.log('='.repeat(60));
+            console.log('🔍 시나리오 쿼리 실행 - 연결 정보 확인');
+            console.log('='.repeat(60));
+            console.log('연결 문자열:', trimmedConnStr);
+            console.log('연결 문자열 길이:', trimmedConnStr.length);
+            console.log('연결 문자열 시작:', trimmedConnStr.substring(0, 50));
+            console.log('데이터베이스 이름:', trimmedDbName);
+            console.log('쿼리 ID:', queryId);
+            console.log('='.repeat(60));
+
+            const requestBody = {
+                connectionString: trimmedConnStr,
+                dbName: trimmedDbName,
+                collection: 'products',
+                query: queries[queryId],
+                queryType: 'aggregate'
+            };
+
+            // 요청 본문 최종 검증 및 출력
+            console.log('='.repeat(80));
+            console.log('📤 클라이언트: 서버로 전송할 요청 본문');
+            console.log('='.repeat(80));
+            console.log('📤 connectionString 전체:', requestBody.connectionString);
+            console.log('📤 connectionString 전체 길이:', requestBody.connectionString.length);
+            console.log('📤 connectionString 시작:', requestBody.connectionString.substring(0, 50));
+            console.log('📤 connectionString 끝:', requestBody.connectionString.substring(Math.max(0, requestBody.connectionString.length - 50)));
+            console.log('📤 localhost 포함 여부:', requestBody.connectionString.includes('localhost') || requestBody.connectionString.includes('127.0.0.1') || requestBody.connectionString.includes(':28000'));
+            console.log('📤 dbName:', requestBody.dbName);
+            console.log('📤 collection:', requestBody.collection);
+            console.log('📤 queryType:', requestBody.queryType);
+            console.log('📤 JSON 직렬화된 전체 요청 본문:', JSON.stringify(requestBody));
+            console.log('='.repeat(80));
+
+                const response = await fetch('/api/execute-query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                console.log('📥 서버 응답 상태:', response.status);
+                const data = await response.json();
+                console.log('📥 서버 응답 데이터:', {
+                    success: data.success,
+                    error: data.error,
+                    hint: data.hint,
+                    executionTime: data.executionTime,
+                    resultCount: data.resultCount
+                });
+                console.log('='.repeat(60));
+                
+                if (data.success) {
+                    showSuccess(resultBox, data.result, data.executionTime, data.resultCount);
+                } else {
+                    showError(resultBox, data.error, data.hint);
+                }
+            } catch (error) {
+                console.error('❌ 요청 중 오류 발생:', error);
+                console.log('='.repeat(60));
+                showError(resultBox, '서버와 통신하는 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        async function executeGetIndexes(collection) {
+            // localStorage에서 먼저 읽기
+            let connectionString = localStorage.getItem('atlasDemoConnectionString');
+            let dbName = localStorage.getItem('atlasDemoDbName');
+            
+            // 없으면 입력 필드에서 읽기
+            const connectionStringInput = document.getElementById('connectionString');
+            const dbNameInput = document.getElementById('dbName');
+            
+            if (!connectionString && connectionStringInput) {
+                connectionString = connectionStringInput.value.trim();
+            }
+            if (!dbName && dbNameInput) {
+                dbName = dbNameInput.value.trim();
+            }
+            
+            connectionString = connectionString ? connectionString.trim() : '';
+            dbName = dbName ? dbName.trim() : '';
+            
+            // 호출한 버튼 확인
+            const event = window.event || arguments[0];
+            const isCheckButton = event && event.target && event.target.textContent && event.target.textContent.includes('인덱스 생성 확인');
+            const resultBox = document.getElementById(isCheckButton ? `result-indexes-${collection}-check` : `result-indexes-${collection}`);
+            
+            if (!connectionString || !dbName) {
+                showError(resultBox, '연결 정보를 입력하세요.', '상단의 연결 정보 입력 폼에 MongoDB Atlas 연결 문자열과 데이터베이스 이름을 입력해주세요.');
+                return;
+            }
+
+            // 연결 문자열 형식 검증
+            if (!connectionString.startsWith('mongodb://') && !connectionString.startsWith('mongodb+srv://')) {
+                showError(resultBox, '올바른 연결 문자열 형식이 아닙니다.', '연결 문자열은 mongodb:// 또는 mongodb+srv://로 시작해야 합니다.');
+                return;
+            }
+
+            resultBox.classList.remove('show', 'success', 'error');
+            resultBox.classList.add('show');
+            resultBox.innerHTML = '<div class="result-header">실행 중...</div><div class="loading"></div>';
+
+            try {
+                const response = await fetch('/api/execute-query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        connectionString,
+                        dbName,
+                        collection: collection,
+                        query: null,
+                        queryType: 'getSearchIndexes'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Index 목록이 비어있으면 안내 메시지 추가
+                    if (Array.isArray(data.result) && data.result.length === 0) {
+                        showSuccess(resultBox, data.result, data.executionTime, data.resultCount);
+                        // 결과 박스에 추가 안내 메시지 표시
+                        setTimeout(() => {
+                            const resultBoxContent = resultBox.innerHTML;
+                            resultBox.innerHTML = resultBoxContent + 
+                                '<div style="margin-top: 12px; padding: 12px; background: rgba(255, 193, 7, 0.1); border-left: 3px solid #FFC107; border-radius: 4px;">' +
+                                '<p style="color: #FFC107; margin: 0; font-size: 14px;"><strong>⚠️ Search Index가 없습니다.</strong></p>' +
+                                '<p style="color: #B8C5D1; margin: 8px 0 0 0; font-size: 13px;">아래 "해결 방법 2"에서 Index 생성 방법을 확인하세요.</p>' +
+                                '</div>';
+                        }, 100);
+                    } else {
+                        showSuccess(resultBox, data.result, data.executionTime, data.resultCount);
+                    }
+                } else {
+                    // 에러가 발생해도 Index가 없을 수 있으므로 안내 메시지 표시
+                    if (data.error && data.error.includes('getSearchIndexes')) {
+                        showError(resultBox, 'Index 목록을 조회할 수 없습니다.', 
+                            'MongoDB 드라이버 버전 문제로 Index 목록을 조회할 수 없습니다.\n\n' +
+                            '대신 MongoDB Atlas UI에서 직접 확인하세요:\n' +
+                            '1. Atlas 콘솔 → Search → Indexes\n' +
+                            '2. Index가 없으면 "해결 방법 2"에서 Index 생성 방법을 확인하세요.');
+                    } else {
+                        showError(resultBox, data.error, data.hint);
+                    }
+                }
+            } catch (error) {
+                console.error('❌ 요청 중 오류 발생:', error);
+                console.log('='.repeat(60));
+                showError(resultBox, '서버와 통신하는 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        async function executeFind(collection, query) {
+            // localStorage에서 먼저 읽기
+            let connectionString = localStorage.getItem('atlasDemoConnectionString');
+            let dbName = localStorage.getItem('atlasDemoDbName');
+            
+            console.log('1. [executeFind] localStorage에서 읽은 값:', {
+                connectionString: connectionString ? connectionString.substring(0, 30) + '...' : '없음',
+                connectionStringLength: connectionString ? connectionString.length : 0,
+                dbName: dbName || '없음'
+            });
+            
+            // 없으면 입력 필드에서 읽기
+            const connectionStringInput = document.getElementById('connectionString');
+            const dbNameInput = document.getElementById('dbName');
+            
+            if (!connectionString && connectionStringInput) {
+                connectionString = connectionStringInput.value.trim();
+                console.log('2. [executeFind] 입력 필드에서 읽은 값:', {
+                    connectionString: connectionString ? connectionString.substring(0, 30) + '...' : '없음',
+                    connectionStringLength: connectionString ? connectionString.length : 0
+                });
+            }
+            if (!dbName && dbNameInput) {
+                dbName = dbNameInput.value.trim();
+            }
+            
+            // 최종적으로 사용할 연결 정보
+            connectionString = connectionString ? connectionString.trim() : '';
+            dbName = dbName ? dbName.trim() : '';
+            
+            const resultBox = document.getElementById(`result-scenario5-1`);
+            
+            console.log('3. [executeFind] 최종 사용할 연결 정보:', { 
+                connectionStringExists: !!connectionString,
+                connectionStringLength: connectionString.length,
+                connectionStringPreview: connectionString ? connectionString.substring(0, 50) + '...' : '비어있음',
+                connectionStringStartsWith: connectionString ? (connectionString.startsWith('mongodb://') || connectionString.startsWith('mongodb+srv://')) : false,
+                dbName: dbName || '비어있음',
+                collection: collection
+            });
+            
+            // 연결 문자열 검증
+            if (!connectionString || connectionString === '') {
+                const errorMsg = '연결 문자열이 비어있습니다.';
+                const hintMsg = '연결 문자열을 찾을 수 없습니다.\n\n' +
+                    '해결 방법:\n' +
+                    '1. 메인 페이지(/)로 이동하여 샘플 데이터를 로딩하세요.\n' +
+                    '2. 또는 상단의 연결 정보 입력 폼에 MongoDB Atlas 연결 문자열을 직접 입력하세요.\n\n' +
+                    'localStorage 값: ' + (localStorage.getItem('atlasDemoConnectionString') ? '있음' : '없음') + '\n' +
+                    '입력 필드 값: ' + (connectionStringInput && connectionStringInput.value ? '있음' : '없음');
+                console.error('❌ [executeFind]', errorMsg, { 
+                    localStorageValue: localStorage.getItem('atlasDemoConnectionString') ? '있음' : '없음',
+                    inputFieldValue: connectionStringInput ? connectionStringInput.value : '필드 없음'
+                });
+                showError(resultBox, errorMsg, hintMsg);
+                return;
+            }
+
+            if (!dbName || dbName === '') {
+                showError(resultBox, '데이터베이스 이름을 입력하세요.', '상단의 연결 정보 입력 폼에 데이터베이스 이름을 입력해주세요.');
+                return;
+            }
+
+            // 연결 문자열 형식 검증
+            if (!connectionString.startsWith('mongodb://') && !connectionString.startsWith('mongodb+srv://')) {
+                const errorMsg = '연결 문자열 형식이 올바르지 않습니다.';
+                const hintMsg = '연결 문자열은 mongodb:// 또는 mongodb+srv://로 시작해야 합니다.\n\n' +
+                    '현재 값의 시작 부분: "' + connectionString.substring(0, 50) + '"\n' +
+                    '전체 길이: ' + connectionString.length + '자';
+                console.error('[executeFind]', errorMsg, { connectionString: connectionString.substring(0, 100) });
+                showError(resultBox, errorMsg, hintMsg);
+                return;
+            }
+
+            if (connectionString.includes('localhost') || connectionString.includes('127.0.0.1') || connectionString.includes(':28000')) {
+                const errorMsg = '연결 문자열에 localhost가 포함되어 있습니다.';
+                const hintMsg = 'MongoDB Atlas 연결 문자열을 사용해야 합니다.\n\n' +
+                    'localhost, 127.0.0.1, 또는 :28000이 포함된 연결 문자열은 사용할 수 없습니다.\n' +
+                    '현재 연결 문자열: ' + connectionString.substring(0, 100);
+                console.error('[executeFind]', errorMsg, { connectionString: connectionString.substring(0, 100) });
+                showError(resultBox, errorMsg, hintMsg);
+                return;
+            }
+
+            resultBox.classList.remove('show', 'success', 'error');
+            resultBox.classList.add('show');
+            resultBox.innerHTML = `
+                <div class="result-header">실행 중...</div>
+                <div style="margin-top: 12px; padding: 12px; background: rgba(0, 0, 0, 0.3); border-radius: 4px; font-size: 12px; font-family: monospace;">
+                    <div style="color: #B8C5D1; margin-bottom: 4px;">연결 문자열:</div>
+                    <div style="color: #00ED64; word-break: break-all;">${connectionString.substring(0, 80)}...</div>
+                    <div style="color: #B8C5D1; margin-top: 8px;">데이터베이스: ${dbName}</div>
+                </div>
+                <div class="loading"></div>
+            `;
+
+            try {
+                // 연결 문자열 최종 확인
+                const trimmedConnStr = connectionString.trim();
+                const trimmedDbName = dbName.trim();
+
+                console.log('='.repeat(60));
+                console.log('🔍 [executeFind] 쿼리 실행 - 연결 정보 확인');
+                console.log('='.repeat(60));
+                console.log('연결 문자열:', trimmedConnStr);
+                console.log('연결 문자열 길이:', trimmedConnStr.length);
+                console.log('연결 문자열 시작:', trimmedConnStr.substring(0, 50));
+                console.log('데이터베이스 이름:', trimmedDbName);
+                console.log('컬렉션:', collection);
+                console.log('쿼리:', JSON.stringify(query, null, 2));
+                console.log('='.repeat(60));
+
+                const requestBody = {
+                    connectionString: trimmedConnStr,
+                    dbName: trimmedDbName,
+                    collection: collection,
+                    query: query,
+                    queryType: 'find'
+                };
+
+                console.log('📤 [executeFind] 서버로 전송할 요청 본문:');
+                console.log('  - connectionString:', requestBody.connectionString.substring(0, 50) + '...');
+                console.log('  - connectionString 전체 길이:', requestBody.connectionString.length);
+                console.log('  - dbName:', requestBody.dbName);
+                console.log('  - collection:', requestBody.collection);
+                console.log('  - queryType:', requestBody.queryType);
+                console.log('  - query:', JSON.stringify(requestBody.query, null, 2));
+
+                const response = await fetch('/api/execute-query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                console.log('📥 [executeFind] 서버 응답 상태:', response.status);
+                console.log('📥 [executeFind] 서버 응답 헤더:', Object.fromEntries(response.headers.entries()));
+
+                const data = await response.json();
+                
+                console.log('📥 [executeFind] 서버 응답 데이터:', {
+                    success: data.success,
+                    resultCount: data.resultCount,
+                    executionTime: data.executionTime,
+                    error: data.error || '없음',
+                    hint: data.hint || '없음'
+                });
+                console.log('='.repeat(60));
+                
+                if (data.success) {
+                    showSuccess(resultBox, data.result, data.executionTime, data.resultCount);
+                } else {
+                    showError(resultBox, data.error, data.hint);
+                }
+            } catch (error) {
+                console.error('❌ [executeFind] 요청 중 오류 발생:', error);
+                console.log('='.repeat(60));
+                showError(resultBox, '서버와 통신하는 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        function showSuccess(resultBox, result, executionTime, resultCount) {
+            resultBox.classList.remove('error');
+            resultBox.classList.add('success', 'show');
+            resultBox.innerHTML = `
+                <div class="result-header">실행 성공 (${executionTime}ms, 결과: ${resultCount}개)</div>
+                <pre>${JSON.stringify(result, null, 2)}</pre>
+            `;
+        }
+
+        function showError(resultBox, error, hint) {
+            resultBox.classList.remove('success');
+            resultBox.classList.add('error', 'show');
+            resultBox.innerHTML = `
+                <div class="result-header">오류 발생</div>
+                <p style="color: #FF5252; margin: 8px 0;">${error}</p>
+                ${hint ? `<p style="color: #B8C5D1; font-size: 13px; margin-top: 8px;">${hint}</p>` : ''}
+            `;
+        }
+
+        async function checkIndexStatus(collection, indexName) {
+            // localStorage에서 먼저 읽기
+            let connectionString = localStorage.getItem('atlasDemoConnectionString');
+            let dbName = localStorage.getItem('atlasDemoDbName');
+            
+            // 없으면 입력 필드에서 읽기
+            const connectionStringInput = document.getElementById('connectionString');
+            const dbNameInput = document.getElementById('dbName');
+            
+            if (!connectionString && connectionStringInput) {
+                connectionString = connectionStringInput.value.trim();
+            }
+            if (!dbName && dbNameInput) {
+                dbName = dbNameInput.value.trim();
+            }
+            
+            connectionString = connectionString ? connectionString.trim() : '';
+            dbName = dbName ? dbName.trim() : '';
+            
+            const resultBox = document.getElementById(`result-indexes-${collection}-check`);
+            
+            if (!connectionString || !dbName) {
+                showError(resultBox, '연결 정보를 입력하세요.', '상단의 연결 정보 입력 폼에 MongoDB Atlas 연결 문자열과 데이터베이스 이름을 입력해주세요.');
+                return;
+            }
+
+            // 연결 문자열 형식 검증
+            if (!connectionString.startsWith('mongodb://') && !connectionString.startsWith('mongodb+srv://')) {
+                showError(resultBox, '올바른 연결 문자열 형식이 아닙니다.', '연결 문자열은 mongodb:// 또는 mongodb+srv://로 시작해야 합니다.');
+                return;
+            }
+
+            if (connectionString.includes('localhost') || connectionString.includes('127.0.0.1') || connectionString.includes(':28000')) {
+                showError(resultBox, '연결 문자열에 localhost가 포함되어 있습니다.', 'MongoDB Atlas 연결 문자열을 사용해야 합니다.');
+                return;
+            }
+
+            resultBox.classList.remove('show', 'success', 'error');
+            resultBox.classList.add('show');
+            resultBox.innerHTML = '<div class="result-header">인덱스 상태 확인 중...</div><div class="loading"></div>';
+
+            try {
+                const response = await fetch('/api/execute-query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        connectionString,
+                        dbName,
+                        collection: collection,
+                        query: null,
+                        queryType: 'getSearchIndexes'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    const indexList = Array.isArray(data.result) ? data.result : [];
+                    
+                    if (indexList.length === 0) {
+                        // Index가 없거나 조회에 실패한 경우
+                        resultBox.classList.remove('success');
+                        resultBox.classList.add('error', 'show');
+                        resultBox.innerHTML = `
+                            <div class="result-header">인덱스 상태 확인 완료</div>
+                            <p style="color: #FF5252; margin: 8px 0; font-size: 16px; font-weight: bold;">❌ Index가 없습니다.</p>
+                            <p style="color: #B8C5D1; margin: 8px 0; font-size: 14px;">아래 "해결 방법 2"에서 Index 생성 방법을 확인하세요.</p>
+                            <p style="color: #7A8B99; margin: 8px 0; font-size: 12px;">참고: Index가 생성 중이면 Atlas UI에서 확인하세요. Index 생성은 몇 분이 걸릴 수 있습니다.</p>
+                        `;
+                    } else {
+                        // Index 목록 전체 표시
+                        let indexListHTML = '<div style="margin-top: 12px;">';
+                        let targetIndexFound = false;
+                        
+                        indexList.forEach((idx, index) => {
+                            // 인덱스 상태 확인 (여러 필드 확인)
+                            let status = '알 수 없음';
+                            if (idx.status) {
+                                status = idx.status; // READY, BUILDING, FAILED, PENDING 등
+                            } else if (idx.queryable === true) {
+                                status = 'READY';
+                            } else if (idx.queryable === false) {
+                                status = 'BUILDING';
+                            } else if (idx.latestDefinition) {
+                                // latestDefinition이 있으면 생성 중일 수 있음
+                                status = 'BUILDING';
+                            }
+                            
+                            const statusColor = status === 'READY' ? '#00ED64' : 
+                                                status === 'BUILDING' || status === 'PENDING' ? '#FFC107' : 
+                                                status === 'FAILED' ? '#FF5252' : '#B8C5D1';
+                            const statusIcon = status === 'READY' ? '✅' : 
+                                              status === 'BUILDING' || status === 'PENDING' ? '⏳' : 
+                                              status === 'FAILED' ? '❌' : '❓';
+                            
+                            if (idx.name === indexName) {
+                                targetIndexFound = true;
+                            }
+                            
+                            indexListHTML += `
+                                <div style="margin-bottom: 16px; padding: 12px; background: rgba(0, 0, 0, 0.2); border-radius: 4px; border-left: 3px solid ${statusColor};">
+                                    <p style="color: ${statusColor}; margin: 0 0 8px 0; font-size: 15px; font-weight: bold;">
+                                        ${statusIcon} <strong>${idx.name || '이름 없음'}</strong> - 상태: <strong>${status}</strong>
+                                    </p>
+                                    ${status === 'READY' ? 
+                                        '<p style="color: #00ED64; margin: 4px 0; font-size: 13px;">✅ Index가 준비되었습니다. 검색 쿼리를 실행할 수 있습니다.</p>' :
+                                        status === 'BUILDING' || status === 'PENDING' ?
+                                        '<p style="color: #FFC107; margin: 4px 0; font-size: 13px;">⏳ Index가 생성 중입니다. 몇 분 후 다시 확인하세요. (이름: ' + (idx.name || '알 수 없음') + ', 상태: ' + status + ')</p>' :
+                                        status === 'FAILED' ?
+                                        '<p style="color: #FF5252; margin: 4px 0; font-size: 13px;">❌ Index 생성에 실패했습니다. Atlas UI에서 확인하세요.</p>' :
+                                        '<p style="color: #B8C5D1; margin: 4px 0; font-size: 13px;">❓ Index 상태를 확인할 수 없습니다. (이름: ' + (idx.name || '알 수 없음') + ')</p>'
+                                    }
+                                    <details style="margin-top: 8px;">
+                                        <summary style="color: #B8C5D1; font-size: 12px; cursor: pointer;">상세 정보 보기</summary>
+                                        <pre style="margin-top: 8px; padding: 8px; background: rgba(0, 0, 0, 0.3); border-radius: 4px; font-size: 11px; overflow-x: auto;">${JSON.stringify(idx, null, 2)}</pre>
+                                    </details>
+                                </div>
+                            `;
+                        });
+                        
+                        indexListHTML += '</div>';
+                        
+                        resultBox.classList.remove('error');
+                        resultBox.classList.add('success', 'show');
+                        resultBox.innerHTML = `
+                            <div class="result-header">인덱스 목록 및 상태 확인 완료</div>
+                            <p style="color: #B8C5D1; margin: 8px 0; font-size: 14px;">총 <strong>${indexList.length}</strong>개의 Index가 있습니다.</p>
+                            ${targetIndexFound ? 
+                                `<p style="color: #00ED64; margin: 8px 0; font-size: 14px;">✅ 찾고 있는 Index '${indexName}'가 목록에 있습니다.</p>` :
+                                indexName ? 
+                                `<p style="color: #FFC107; margin: 8px 0; font-size: 14px;">⚠️ 찾고 있는 Index '${indexName}'가 목록에 없습니다. Index 이름을 확인하세요.</p>` :
+                                ''
+                            }
+                            ${indexListHTML}
+                        `;
+                    }
+                } else {
+                    // 에러가 발생한 경우
+                    let errorMessage = data.error || 'Index 목록을 조회할 수 없습니다.';
+                    let errorHint = data.hint || '';
+                    
+                    if (data.error && (data.error.includes('getSearchIndexes') || data.error.includes('Search Index'))) {
+                        errorHint = 'MongoDB 드라이버를 통한 Index 목록 조회에 실패했습니다.\n\n' +
+                            '가능한 원인:\n' +
+                            '1. Index가 아직 생성되지 않았을 수 있습니다.\n' +
+                            '2. Index가 생성 중(BUILDING)일 수 있습니다.\n' +
+                            '3. MongoDB 드라이버 버전 문제일 수 있습니다.\n\n' +
+                            '해결 방법:\n' +
+                            '1. MongoDB Atlas UI에서 직접 확인하세요:\n' +
+                            '   - Atlas 콘솔 → Search → Indexes\n' +
+                            '   - Index 이름과 상태를 확인하세요\n' +
+                            '2. Index가 BUILDING 상태면 몇 분 후 다시 확인하세요.\n' +
+                            '3. Index가 없으면 "해결 방법 2"에서 Index 생성 방법을 확인하세요.';
+                    }
+                    
+                    resultBox.classList.remove('success');
+                    resultBox.classList.add('error', 'show');
+                    resultBox.innerHTML = `
+                        <div class="result-header">인덱스 상태 확인 완료</div>
+                        <p style="color: #FF5252; margin: 8px 0; font-size: 16px; font-weight: bold;">❌ ${errorMessage}</p>
+                        <p style="color: #B8C5D1; margin: 8px 0; font-size: 14px; white-space: pre-line;">${errorHint}</p>
+                        <p style="color: #7A8B99; margin: 8px 0; font-size: 12px; margin-top: 12px;">💡 팁: Index가 생성 중이면 Atlas UI에서 이름과 상태를 확인할 수 있습니다.</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('❌ 인덱스 상태 확인 중 오류 발생:', error);
+                showError(resultBox, '서버와 통신하는 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
