@@ -537,10 +537,35 @@ app.post('/api/execute-query', async (req, res) => {
         
         // Index 관련 에러인 경우
         if (aggError.message && (aggError.message.includes('index') || aggError.message.includes('Index'))) {
+          let errorHint = 'Search Index가 올바르게 설정되어 있는지 확인하세요.';
+          
+          // autocomplete 관련 에러인 경우
+          if (aggError.message.includes('autocomplete') && aggError.message.includes('definition not present')) {
+            errorHint = 'autocomplete 검색을 사용하려면 <strong>별도의 Search Index</strong>를 생성해야 합니다.\n\n' +
+              '현재 Index는 string 타입으로 정의되어 있어 autocomplete 검색이 불가능합니다.\n\n' +
+              '해결 방법:\n' +
+              '1. Atlas UI → Search → Create Search Index\n' +
+              '2. <strong>Index 이름:</strong> productSearchAutocomplete (다른 이름 사용 가능)\n' +
+              '3. JSON Editor 선택 후 아래 JSON 사용:\n' +
+              '   {\n' +
+              '     "mappings": {\n' +
+              '       "dynamic": false,\n' +
+              '       "fields": {\n' +
+              '         "name": {\n' +
+              '           "type": "autocomplete",\n' +
+              '           "analyzer": "lucene.korean"\n' +
+              '         }\n' +
+              '       }\n' +
+              '     }\n' +
+              '   }\n' +
+              '4. Index가 READY 상태가 되면 쿼리에서 index 이름을 "productSearchAutocomplete"로 변경하여 실행하세요.\n' +
+              '5. 또는 text 검색을 사용하세요 (현재 productSearch Index와 호환됨).';
+          }
+          
           return res.status(400).json({
             success: false,
             error: aggError.message,
-            hint: 'Search Index가 올바르게 설정되어 있는지 확인하세요.'
+            hint: errorHint
           });
         }
         

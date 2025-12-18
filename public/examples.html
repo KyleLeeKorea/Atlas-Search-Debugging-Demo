@@ -442,6 +442,7 @@ db.products.getSearchIndexes()</code>
                         <li><strong>phrase:</strong> 갤럭시 프로를 정확한 구문으로 검색</li>
                     </ul>
                 </div>
+                
                 <div class="solution-box">
                     <p><strong>text 검색:</strong></p>
                     <div class="code-block">
@@ -457,6 +458,162 @@ db.products.getSearchIndexes()</code>
                     </div>
                     <button class="execute-btn" onclick="executeQuery('scenario2-1-text')">text 검색 실행</button>
                     <div class="result-box" id="result-scenario2-1-text"></div>
+                </div>
+
+                <div class="solution-box" style="margin-top: 20px;">
+                    <p><strong>문제1-1: "왜 스마트폰이 이어폰보다 아래 나오죠?"</strong></p>
+                    <p style="color: #B8C5D1; font-size: 13px; margin: 8px 0;">
+                        검색 결과에서 특정 카테고리(예: 스마트폰)의 상품이 다른 카테고리(예: 이어폰)보다 낮은 순위로 나타나는 경우, 다음과 같은 방법으로 해결할 수 있습니다.
+                    </p>
+                </div>
+
+                <div class="solution-box" style="margin-top: 20px;">
+                    <p><strong>해결 방법 1-1a: Field Boost (필드 가중치 강화)</strong></p>
+                    <p style="color: #B8C5D1; font-size: 13px; margin: 8px 0;">
+                        특정 필드(예: name)에 더 높은 가중치를 부여하고, 카테고리별 가중치도 함께 적용하여 원하는 카테고리의 상품이 상위로 올라오도록 합니다.
+                    </p>
+                    <div class="code-block">
+                        <code>db.products.aggregate([
+  {
+    $search: {
+      index: "productSearch",
+      compound: {
+        must: [
+          {
+            text: {
+              query: "갤럭시",
+              path: "name"
+            }
+          }
+        ],
+        should: [
+          {
+            text: {
+              query: "갤럭시",
+              path: "name",
+              score: { boost: { value: 2 } }
+            }
+          },
+          {
+            text: {
+              query: "스마트폰",
+              path: "category",
+              score: { boost: { value: 5 } }
+            }
+          }
+        ],
+        minimumShouldMatch: 0
+      }
+    }
+  },
+  { $limit: 5 }
+])</code>
+                    </div>
+                    <button class="execute-btn" onclick="executeQuery('scenario2-1-text-boost')">Field Boost 검색 실행</button>
+                    <div class="result-box" id="result-scenario2-1-text-boost"></div>
+                </div>
+
+                <div class="solution-box" style="margin-top: 20px;">
+                    <p><strong>해결 방법 1-1b: Compound + Should (상품군 가중치)</strong></p>
+                    <p style="color: #B8C5D1; font-size: 13px; margin: 8px 0;">
+                        compound 쿼리를 사용하여 특정 카테고리(예: "스마트폰")에 매칭되는 문서에 추가 점수를 부여합니다.
+                    </p>
+                    <div class="code-block">
+                        <code>db.products.aggregate([
+  {
+    $search: {
+      index: "productSearch",
+      compound: {
+        must: [
+          {
+            text: {
+              query: "갤럭시",
+              path: "name"
+            }
+          }
+        ],
+        should: [
+          {
+            text: {
+              query: "스마트폰",
+              path: "category"
+            }
+          }
+        ],
+        minimumShouldMatch: 0
+      }
+    }
+  },
+  { $limit: 5 }
+])</code>
+                    </div>
+                    <button class="execute-btn" onclick="executeQuery('scenario2-1-compound-should')">Compound + Should 검색 실행</button>
+                    <div class="result-box" id="result-scenario2-1-compound-should"></div>
+                </div>
+
+                <div class="solution-box" style="margin-top: 20px;">
+                    <p><strong>autocomplete 검색:</strong></p>
+                    <p style="color: #FFC107; font-size: 13px; margin: 8px 0; padding: 8px; background: rgba(255, 193, 7, 0.1); border-left: 3px solid #FFC107; border-radius: 4px;">
+                        ⚠️ <strong>중요:</strong> autocomplete 검색을 사용하려면 <strong>별도의 Search Index</strong>를 생성해야 합니다. <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">productSearch</code> Index는 <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">string</code> 타입이므로 autocomplete 검색이 불가능합니다.
+                    </p>
+                    <p style="color: #B8C5D1; font-size: 13px; margin: 12px 0;">
+                        <strong>해결 방법:</strong> Atlas UI에서 새로운 Index를 생성하세요:
+                    </p>
+                    <ol style="color: #B8C5D1; font-size: 13px; margin: 8px 0; padding-left: 20px;">
+                        <li>Atlas 콘솔 → Search → Create Search Index</li>
+                        <li><strong>Index 이름:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">productSearchAutocomplete</code> (다른 이름 사용 가능)</li>
+                        <li>JSON Editor 선택 후 아래 JSON 사용:</li>
+                    </ol>
+                    <div class="code-block" style="font-size: 11px;">
+                        <code>{
+  "mappings": {
+    "dynamic": false,
+    "fields": {
+      "name": {
+        "type": "autocomplete",
+        "analyzer": "lucene.korean"
+      },
+      "description": {
+        "type": "autocomplete",
+        "analyzer": "lucene.korean"
+      }
+    }
+  }
+}</code>
+                    </div>
+                    <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">
+                        Index 생성 후 아래 쿼리에서 <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">index: "productSearchAutocomplete"</code>로 변경하여 실행하세요.
+                    </p>
+                    <div class="code-block">
+                        <code>db.products.aggregate([
+  {
+    $search: {
+      index: "productSearchAutocomplete",
+      autocomplete: { query: "갤럭시", path: "name" }
+    }
+  },
+  { $limit: 5 }
+])</code>
+                    </div>
+                    <button class="execute-btn" onclick="executeQuery('scenario2-1-autocomplete')">autocomplete 검색 실행</button>
+                    <div class="result-box" id="result-scenario2-1-autocomplete"></div>
+                </div>
+
+                <div class="solution-box" style="margin-top: 20px;">
+                    <p><strong>phrase 검색:</strong></p>
+                    <div class="code-block">
+                        <code>db.products.aggregate([
+  {
+    $search: {
+      index: "productSearch",
+      phrase: { query: "갤럭시 프로", path: "name" }
+    }
+  },
+  { $limit: 5 }
+])</code>
+                    </div>
+                    <button class="execute-btn" onclick="executeQuery('scenario2-1-phrase')">phrase 검색 실행</button>
+                    <div class="result-box" id="result-scenario2-1-phrase"></div>
                 </div>
 
                 <h3>문제 2: Score 확인</h3>
@@ -801,6 +958,86 @@ db.collection.aggregate([
                     },
                     { $limit: 5 }
                 ],
+                'scenario2-1-text-boost': [
+                    {
+                        $search: {
+                            index: "productSearch",
+                            compound: {
+                                must: [
+                                    {
+                                        text: {
+                                            query: "갤럭시",
+                                            path: "name"
+                                        }
+                                    }
+                                ],
+                                should: [
+                                    {
+                                        text: {
+                                            query: "갤럭시",
+                                            path: "name",
+                                            score: { boost: { value: 2 } }
+                                        }
+                                    },
+                                    {
+                                        text: {
+                                            query: "스마트폰",
+                                            path: "category",
+                                            score: { boost: { value: 5 } }
+                                        }
+                                    }
+                                ],
+                                minimumShouldMatch: 0
+                            }
+                        }
+                    },
+                    { $limit: 5 }
+                ],
+                'scenario2-1-compound-should': [
+                    {
+                        $search: {
+                            index: "productSearch",
+                            compound: {
+                                must: [
+                                    {
+                                        text: {
+                                            query: "갤럭시",
+                                            path: "name"
+                                        }
+                                    }
+                                ],
+                                should: [
+                                    {
+                                        text: {
+                                            query: "스마트폰",
+                                            path: "category"
+                                        }
+                                    }
+                                ],
+                                minimumShouldMatch: 0
+                            }
+                        }
+                    },
+                    { $limit: 5 }
+                ],
+                'scenario2-1-autocomplete': [
+                    {
+                        $search: {
+                            index: "productSearchAutocomplete",
+                            autocomplete: { query: "갤럭시", path: "name" }
+                        }
+                    },
+                    { $limit: 5 }
+                ],
+                'scenario2-1-phrase': [
+                    {
+                        $search: {
+                            index: "productSearch",
+                            phrase: { query: "갤럭시 프로", path: "name" }
+                        }
+                    },
+                    { $limit: 5 }
+                ],
                 'scenario2-2': [
                     {
                         $search: {
@@ -928,7 +1165,127 @@ db.collection.aggregate([
                 console.log('='.repeat(60));
                 
                 if (data.success) {
-                    showSuccess(resultBox, data.result, data.executionTime, data.resultCount);
+                    // autocomplete 검색인 경우 설명 추가
+                    if (queryId === 'scenario2-1-autocomplete') {
+                        const autocompleteExplanation = `
+                            <div style="margin-bottom: 20px; padding: 16px; background: rgba(0, 150, 255, 0.05); border: 1px solid rgba(0, 150, 255, 0.2); border-radius: 4px;">
+                                <p style="color: #0096FF; font-size: 14px; font-weight: 600; margin-bottom: 12px;">1. 이 결과의 정체 (한 줄 요약)</p>
+                                <p style="color: #B8C5D1; font-size: 14px; line-height: 1.6; margin-bottom: 12px;">
+                                    이 결과는 사용자가 "갤럭시"를 입력 중일 때, 제품명을 자동 완성하기 위해 prefix 기반으로 매칭된 후보 목록이다.
+                                </p>
+                                <p style="color: #B8C5D1; font-size: 14px; line-height: 1.6; margin-top: 12px;">
+                                    <strong>즉:</strong>
+                                </p>
+                                <ul style="color: #B8C5D1; font-size: 14px; line-height: 1.6; margin: 8px 0; padding-left: 20px;">
+                                    <li style="margin: 4px 0;">"가장 관련 있는 상품"이 아니라</li>
+                                    <li style="margin: 4px 0;">"이 입력으로 시작할 수 있는 이름들"의 제안 목록</li>
+                                </ul>
+                            </div>
+                            <div style="margin-bottom: 20px; padding: 16px; background: rgba(0, 150, 255, 0.05); border: 1px solid rgba(0, 150, 255, 0.2); border-radius: 4px;">
+                                <p style="color: #0096FF; font-size: 14px; font-weight: 600; margin-bottom: 12px;">2. autocomplete의 핵심 동작 방식</p>
+                                <p style="color: #B8C5D1; font-size: 13px; font-weight: 600; margin-bottom: 8px;">2.1 text 검색과의 근본적 차이</p>
+                                <table style="width: 100%; border-collapse: collapse; margin-top: 8px; background: rgba(0, 0, 0, 0.2); border-radius: 4px; overflow: hidden;">
+                                    <thead>
+                                        <tr style="background: rgba(0, 150, 255, 0.1);">
+                                            <th style="padding: 10px 12px; text-align: left; color: #0096FF; font-size: 13px; font-weight: 600; border-bottom: 1px solid rgba(0, 150, 255, 0.2);">항목</th>
+                                            <th style="padding: 10px 12px; text-align: left; color: #0096FF; font-size: 13px; font-weight: 600; border-bottom: 1px solid rgba(0, 150, 255, 0.2);">text</th>
+                                            <th style="padding: 10px 12px; text-align: left; color: #0096FF; font-size: 13px; font-weight: 600; border-bottom: 1px solid rgba(0, 150, 255, 0.2);">autocomplete</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                                            <td style="padding: 10px 12px; color: #FFFFFF; font-size: 13px;">목적</td>
+                                            <td style="padding: 10px 12px; color: #B8C5D1; font-size: 13px;">정확한 검색</td>
+                                            <td style="padding: 10px 12px; color: #B8C5D1; font-size: 13px;">입력 보조</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                                            <td style="padding: 10px 12px; color: #FFFFFF; font-size: 13px;">기준</td>
+                                            <td style="padding: 10px 12px; color: #B8C5D1; font-size: 13px;">relevance</td>
+                                            <td style="padding: 10px 12px; color: #B8C5D1; font-size: 13px;">prefix 매칭</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                                            <td style="padding: 10px 12px; color: #FFFFFF; font-size: 13px;">토큰화</td>
+                                            <td style="padding: 10px 12px; color: #B8C5D1; font-size: 13px;">일반 analyzer</td>
+                                            <td style="padding: 10px 12px; color: #B8C5D1; font-size: 13px;">edge n-gram</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 10px 12px; color: #FFFFFF; font-size: 13px;">점수 의미</td>
+                                            <td style="padding: 10px 12px; color: #B8C5D1; font-size: 13px;">중요</td>
+                                            <td style="padding: 10px 12px; color: #B8C5D1; font-size: 13px;">거의 의미 없음</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                        resultBox.classList.remove('error');
+                        resultBox.classList.add('success', 'show');
+                        resultBox.innerHTML = `
+                            <div class="result-header">실행 성공 (${data.executionTime}ms, 결과: ${data.resultCount}개)</div>
+                            ${autocompleteExplanation}
+                            <div style="margin-top: 16px;">
+                                <p style="color: #00ED64; font-size: 13px; font-weight: 600; margin-bottom: 8px;">검색 결과:</p>
+                                <pre style="background: rgba(0, 0, 0, 0.3); padding: 12px; border-radius: 4px; overflow-x: auto; font-size: 12px;">${JSON.stringify(data.result, null, 2)}</pre>
+                            </div>
+                        `;
+                    } else if (queryId === 'scenario2-2') {
+                        // Score 확인 예제인 경우 설명 추가
+                        const scoreExplanation = `
+                            <div style="margin-bottom: 20px; padding: 16px; background: rgba(0, 150, 255, 0.05); border: 1px solid rgba(0, 150, 255, 0.2); border-radius: 4px;">
+                                <p style="color: #0096FF; font-size: 14px; font-weight: 600; margin-bottom: 12px;">이 예제의 목적:</p>
+                                <p style="color: #B8C5D1; font-size: 14px; line-height: 1.6; margin-bottom: 12px;">
+                                    Atlas Search가 각 문서에 어떤 점수(score)를 부여했고, 그 점수 기준으로 정렬했을 때 상위 문서가 무엇인지 확인하는 디버깅 예제
+                                </p>
+                                <p style="color: #B8C5D1; font-size: 14px; line-height: 1.6; margin-bottom: 12px; margin-top: 16px;">
+                                    <strong>스코어링 방식:</strong> Atlas Search는 내부적으로 Lucene BM25 계열 스코어링을 사용합니다.
+                                </p>
+                                <p style="color: #B8C5D1; font-size: 14px; line-height: 1.6; margin-bottom: 12px;">
+                                    즉, score는 다음 요소들의 조합 결과입니다.
+                                </p>
+                                <table style="width: 100%; border-collapse: collapse; margin-top: 12px; background: rgba(0, 0, 0, 0.2); border-radius: 4px; overflow: hidden;">
+                                    <thead>
+                                        <tr style="background: rgba(0, 237, 100, 0.1);">
+                                            <th style="padding: 10px 12px; text-align: left; color: #00ED64; font-size: 13px; font-weight: 600; border-bottom: 1px solid rgba(0, 237, 100, 0.2);">요소</th>
+                                            <th style="padding: 10px 12px; text-align: left; color: #00ED64; font-size: 13px; font-weight: 600; border-bottom: 1px solid rgba(0, 237, 100, 0.2);">영향</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                                            <td style="padding: 10px 12px; color: #FFFFFF; font-size: 13px;">토큰 매칭 여부</td>
+                                            <td style="padding: 10px 12px; color: #B8C5D1; font-size: 13px;">기본 조건</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                                            <td style="padding: 10px 12px; color: #FFFFFF; font-size: 13px;">토큰 위치</td>
+                                            <td style="padding: 10px 12px; color: #B8C5D1; font-size: 13px;">앞에 있을수록 유리</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                                            <td style="padding: 10px 12px; color: #FFFFFF; font-size: 13px;">필드 길이</td>
+                                            <td style="padding: 10px 12px; color: #B8C5D1; font-size: 13px;">짧을수록 유리</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                                            <td style="padding: 10px 12px; color: #FFFFFF; font-size: 13px;">다른 토큰과의 조합</td>
+                                            <td style="padding: 10px 12px; color: #B8C5D1; font-size: 13px;">문맥적 관련성</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 10px 12px; color: #FFFFFF; font-size: 13px;">전체 문서 대비 희소성</td>
+                                            <td style="padding: 10px 12px; color: #B8C5D1; font-size: 13px;">흔할수록 불리</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                        resultBox.classList.remove('error');
+                        resultBox.classList.add('success', 'show');
+                        resultBox.innerHTML = `
+                            <div class="result-header">실행 성공 (${data.executionTime}ms, 결과: ${data.resultCount}개)</div>
+                            ${scoreExplanation}
+                            <div style="margin-top: 16px;">
+                                <p style="color: #00ED64; font-size: 13px; font-weight: 600; margin-bottom: 8px;">검색 결과 (score 기준 정렬):</p>
+                                <pre style="background: rgba(0, 0, 0, 0.3); padding: 12px; border-radius: 4px; overflow-x: auto; font-size: 12px;">${JSON.stringify(data.result, null, 2)}</pre>
+                            </div>
+                        `;
+                    } else {
+                        showSuccess(resultBox, data.result, data.executionTime, data.resultCount);
+                    }
                 } else {
                     showError(resultBox, data.error, data.hint);
                 }
