@@ -158,6 +158,36 @@
             white-space: pre;
         }
 
+        .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0, 237, 100, 0.2);
+            border: 1px solid rgba(0, 237, 100, 0.4);
+            color: #00ED64;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 500;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+
+        .copy-btn:hover {
+            background: rgba(0, 237, 100, 0.3);
+            border-color: #00ED64;
+        }
+
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+
+        .copy-btn.copied {
+            background: rgba(0, 237, 100, 0.4);
+            color: #FFFFFF;
+        }
+
         .execute-btn {
             background: #00ED64;
             color: #001E2B;
@@ -841,6 +871,9 @@ db.bigProducts.getSearchIndexes()</code>
                     <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">
                         ⚠️ 이 설정은 Atlas UI에서 Index 생성 시 사용합니다. 웹에서 직접 실행할 수 없습니다.
                     </p>
+                    <p style="color: #B8C5D1; font-size: 13px; margin: 8px 0;">
+                        <strong>Index 이름:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">bigProductSearchDynamic</code>
+                    </p>
                     <p style="color: #B8C5D1; font-size: 13px; margin: 12px 0; padding: 8px; background: rgba(0, 150, 255, 0.1); border-left: 3px solid #0096FF; border-radius: 4px;">
                         💡 <strong>인덱스 사이즈 비교:</strong> dynamic: true 인덱스의 사이즈를 확인하려면 Atlas UI에서 확인하거나, 아래 버튼으로 인덱스 정보를 조회하세요.
                     </p>
@@ -867,6 +900,9 @@ db.bigProducts.getSearchIndexes()</code>
                     </div>
                     <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">
                         ⚠️ 이 설정은 Atlas UI에서 Index 생성 시 사용합니다. 웹에서 직접 실행할 수 없습니다.
+                    </p>
+                    <p style="color: #B8C5D1; font-size: 13px; margin: 8px 0;">
+                        <strong>Index 이름:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">bigProductSearchStatic</code>
                     </p>
                     <p style="color: #B8C5D1; font-size: 13px; margin: 12px 0; padding: 8px; background: rgba(0, 237, 100, 0.1); border-left: 3px solid #00ED64; border-radius: 4px;">
                         💡 <strong>인덱스 사이즈 비교:</strong> dynamic: false 인덱스의 사이즈를 확인하려면 Atlas UI에서 확인하거나, 아래 버튼으로 인덱스 정보를 조회하세요.
@@ -896,10 +932,35 @@ db.bigProducts.getSearchIndexes()</code>
                     <div class="result-box" id="result-scenario3-3-before"></div>
                 </div>
 
+                <div class="solution-box" style="margin-top: 20px; background: rgba(255, 82, 82, 0.1); border: 1px solid rgba(255, 82, 82, 0.3);">
+                    <p><strong>❌ 잘못된 After (더 느림!)</strong></p>
+                    <p style="color: #FF5252; font-size: 13px; margin: 8px 0; padding: 8px; background: rgba(255, 82, 82, 0.1); border-left: 3px solid #FF5252; border-radius: 4px;">
+                        <strong>문제:</strong> <code>must</code>에 두 개의 <code>text</code> 쿼리를 사용하면 두 필드 모두 점수 계산이 수행되어 더 느려질 수 있습니다. 정확 일치가 필요한 필드는 <code>text</code> 대신 <code>equals</code>를 사용해야 합니다.
+                    </p>
+                    <div class="code-block">
+                        <code>db.bigProducts.aggregate([
+  {
+    $search: {
+      index: "bigProductSearch",
+      compound: {
+        must: [
+          { text: { query: "갤럭시", path: "name" } },
+          { text: { query: "스마트폰", path: "category" } }
+        ]
+      }
+    }
+  }
+])</code>
+                    </div>
+                    <button class="execute-btn" onclick="executeQuery('scenario3-3-wrong')">잘못된 After 쿼리 실행</button>
+                    <div class="result-box" id="result-scenario3-3-wrong"></div>
+                </div>
+
                 <div class="solution-box" style="margin-top: 20px;">
-                    <p><strong>✅ After</strong></p>
+                    <p><strong>✅ 올바른 After</strong></p>
                     <p style="color: #00ED64; font-size: 13px; margin: 8px 0; padding: 8px; background: rgba(0, 237, 100, 0.1); border-left: 3px solid #00ED64; border-radius: 4px;">
-                        <strong>개선 효과:</strong> Lucene 단계에서 필터링, I/O, 메모리 사용량 대폭 감소
+                        <strong>개선 효과:</strong> Lucene 단계에서 필터링, I/O, 메모리 사용량 대폭 감소<br>
+                        💡 <strong>핵심:</strong> <code>filter</code>는 점수 계산 없이 필터링만 수행하므로 <code>must</code>보다 빠릅니다. 정확 일치가 필요한 경우 <code>equals</code>를 <code>filter</code>에 사용하세요.
                     </p>
                     <div class="code-block">
                         <code>db.bigProducts.aggregate([
@@ -943,23 +1004,106 @@ db.bigProducts.getSearchIndexes()</code>
                 </div>
 
                 <h3>예제 5: autocomplete 성능 최적화</h3>
+                
+                <div class="solution-box" style="margin-bottom: 30px;">
+                    <p><strong>⚠️ 사전 준비: autocomplete Index 확인 및 생성</strong></p>
+                    <p style="color: #B8C5D1; font-size: 13px; margin: 8px 0;">
+                        예제 5는 autocomplete 전용 인덱스가 필요합니다. <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">bigProducts</code> 컬렉션에 <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">bigProductSearchAutocomplete</code> 인덱스를 생성하세요.
+                    </p>
+                    <div class="solution-box" style="margin-top: 16px;">
+                        <p><strong>1. Index 목록 확인</strong></p>
+                        <div class="code-block">
+                            <code>// Index 목록 확인
+db.bigProducts.getSearchIndexes()</code>
+                        </div>
+                        <button class="execute-btn" onclick="executeGetIndexesForExample5('bigProducts')">Index 목록 조회</button>
+                        <div class="result-box" id="result-indexes-bigProducts-example5"></div>
+                    </div>
+                    <div class="solution-box" style="margin-top: 20px;">
+                        <p><strong>2. Index 생성 (Index가 없는 경우)</strong></p>
+                        <p style="color: #B8C5D1; font-size: 14px; margin: 12px 0;">MongoDB Atlas UI에서 Search Index를 생성하세요:</p>
+                        <ol style="color: #B8C5D1; font-size: 14px; margin: 12px 0; padding-left: 20px;">
+                            <li>MongoDB Atlas 콘솔에 로그인</li>
+                            <li>왼쪽 메뉴에서 <strong>Search</strong> 클릭</li>
+                            <li><strong>Create Search Index</strong> 버튼 클릭</li>
+                            <li><strong>JSON Editor</strong> 선택</li>
+                            <li>아래 JSON을 복사하여 붙여넣기:</li>
+                        </ol>
+                        <div class="code-block">
+                            <code>{
+  "mappings": {
+    "dynamic": false,
+    "fields": {
+      "name": {
+        "type": "autocomplete",
+        "minGrams": 2,
+        "maxGrams": 15
+      }
+    }
+  }
+}</code>
+                        </div>
+                        <p style="color: #B8C5D1; font-size: 14px; margin: 12px 0;">
+                            <strong>Index 이름:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">bigProductSearchAutocomplete</code>
+                        </p>
+                        <p style="color: #B8C5D1; font-size: 14px; margin: 12px 0;">
+                            <strong>Database:</strong> 사용 중인 데이터베이스 이름
+                        </p>
+                        <p style="color: #B8C5D1; font-size: 14px; margin: 12px 0;">
+                            <strong>Collection:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">bigProducts</code>
+                        </p>
+                        <p style="color: #B8C5D1; font-size: 13px; margin-top: 12px; padding: 12px; background: rgba(0, 150, 255, 0.1); border-left: 3px solid #0096FF; border-radius: 4px;">
+                            💡 <strong>참고:</strong> Index 생성 후 BUILDING 상태에서 READY 상태로 변경되는데 몇 분이 걸릴 수 있습니다. READY 상태가 되면 쿼리를 실행할 수 있습니다.
+                        </p>
+                        <button class="execute-btn" onclick="checkIndexStatusForExample5('bigProducts', 'bigProductSearchAutocomplete')" style="margin-top: 16px;">인덱스 생성 확인</button>
+                        <div class="result-box" id="result-indexes-bigProducts-autocomplete-check"></div>
+                    </div>
+                </div>
+
                 <div class="solution-box" style="margin-top: 20px;">
                     <p><strong>❌ Before</strong></p>
                     <p style="color: #FFC107; font-size: 13px; margin: 8px 0; padding: 8px; background: rgba(255, 193, 7, 0.1); border-left: 3px solid #FFC107; border-radius: 4px;">
-                        긴 description까지 autocomplete 대상
+                        <strong>문제:</strong> 긴 description까지 autocomplete 대상으로 하면 Index 크기가 커지고 성능이 저하됩니다.
                     </p>
                     <div class="code-block">
                         <code>{
-  "name": {
-    "type": "autocomplete"
-  },
-  "description": {
-    "type": "autocomplete"
+  "mappings": {
+    "dynamic": false,
+    "fields": {
+      "name": {
+        "type": "autocomplete"
+      },
+      "description": {
+        "type": "autocomplete"
+      }
+    }
   }
 }</code>
                     </div>
                     <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">
-                        ⚠️ 이 설정은 Atlas UI에서 Index 생성 시 사용합니다. 웹에서 직접 실행할 수 없습니다.
+                        ⚠️ 이 설정은 Atlas UI에서 Index 생성 시 사용합니다. Index 이름: <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">bigProductSearchAutocompleteBefore</code>
+                    </p>
+                    <p style="color: #B8C5D1; font-size: 13px; margin: 8px 0; padding: 8px; background: rgba(255, 193, 7, 0.1); border-left: 3px solid #FFC107; border-radius: 4px;">
+                        <strong>📝 Before 쿼리 예제:</strong> description까지 autocomplete 대상으로 한 경우
+                    </p>
+                    <div class="code-block">
+                        <code>db.bigProducts.aggregate([
+  {
+    $search: {
+      index: "bigProductSearchAutocompleteBefore",
+      autocomplete: {
+        query: "삼성",
+        path: "name"
+      }
+    }
+  },
+  { $limit: 10 }
+])</code>
+                    </div>
+                    <button class="execute-btn" onclick="executeQuery('scenario3-5-autocomplete-before')">Before autocomplete 쿼리 실행</button>
+                    <div class="result-box" id="result-scenario3-5-autocomplete-before"></div>
+                    <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0; margin-top: 12px; padding: 8px; background: rgba(255, 193, 7, 0.1); border-left: 3px solid #FFC107; border-radius: 4px;">
+                        ⚠️ <strong>참고:</strong> Before 인덱스(<code>bigProductSearchAutocompleteBefore</code>)를 생성하지 않으면 쿼리가 실패합니다. Before 인덱스는 선택 사항이며, 성능 비교를 위해 생성할 수 있습니다.
                     </p>
                 </div>
 
@@ -979,6 +1123,39 @@ db.bigProducts.getSearchIndexes()</code>
                     </div>
                     <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">
                         ⚠️ 이 설정은 Atlas UI에서 Index 생성 시 사용합니다. 웹에서 직접 실행할 수 없습니다.
+                    </p>
+                </div>
+
+                <div class="solution-box" style="margin-top: 20px;">
+                    <p><strong>📝 실제 쿼리 예제</strong></p>
+                    <p style="color: #B8C5D1; font-size: 13px; margin: 8px 0; padding: 8px; background: rgba(0, 150, 255, 0.1); border-left: 3px solid #0096FF; border-radius: 4px;">
+                        <strong>설명:</strong> autocomplete 인덱스가 생성되면 아래 쿼리로 자동완성 기능을 테스트할 수 있습니다. 사용자가 "삼성"을 입력하면 "삼성"으로 시작하는 제품명을 자동완성으로 제안합니다.
+                    </p>
+                    <div class="code-block">
+                        <code>db.bigProducts.aggregate([
+  {
+    $search: {
+      index: "bigProductSearchAutocomplete",
+      autocomplete: {
+        query: "삼성",
+        path: "name"
+      }
+    }
+  },
+  { $limit: 10 }
+])</code>
+                    </div>
+                    <button class="execute-btn" onclick="executeQuery('scenario3-5-autocomplete')">autocomplete 쿼리 실행</button>
+                    <div class="result-box" id="result-scenario3-5-autocomplete"></div>
+                    <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0; margin-top: 12px; padding: 8px; background: rgba(0, 150, 255, 0.1); border-left: 3px solid #0096FF; border-radius: 4px;">
+                        💡 <strong>팁:</strong> autocomplete는 prefix 기반으로 매칭됩니다. 제품명이 "삼성 갤럭시 ..." 형식이므로 "삼성"으로 검색하면 결과가 나옵니다. 다른 검색어로도 테스트해보세요 (예: "갤럭시", "아이", "프로"). 
+                        <br><br>
+                        ⚠️ <strong>결과가 0건인 경우:</strong> 
+                        <ul style="margin: 8px 0; padding-left: 20px;">
+                            <li>인덱스가 READY 상태인지 확인하세요 (BUILDING 상태면 몇 분 기다려야 합니다)</li>
+                            <li>인덱스 이름이 <code>bigProductSearchAutocomplete</code>인지 확인하세요</li>
+                            <li>검색어를 "삼성", "갤럭시", "아이" 등으로 변경해보세요</li>
+                        </ul>
                     </p>
                 </div>
 
@@ -1453,6 +1630,20 @@ db.collection.aggregate([
                     { $match: { category: "스마트폰" } },
                     { $limit: 10 }
                 ],
+                'scenario3-3-wrong': [
+                    {
+                        $search: {
+                            index: "bigProductSearch",
+                            compound: {
+                                must: [
+                                    { text: { query: "갤럭시", path: "name" } },
+                                    { text: { query: "스마트폰", path: "category" } }
+                                ]
+                            }
+                        }
+                    },
+                    { $limit: 10 }
+                ],
                 'scenario3-3-after': [
                     {
                         $search: {
@@ -1476,6 +1667,30 @@ db.collection.aggregate([
                             text: { query: "갤럭시", path: "name" }
                         }
                     }
+                ],
+                'scenario3-5-autocomplete-before': [
+                    {
+                        $search: {
+                            index: "bigProductSearchAutocompleteBefore",
+                            autocomplete: {
+                                query: "삼성",
+                                path: "name"
+                            }
+                        }
+                    },
+                    { $limit: 10 }
+                ],
+                'scenario3-5-autocomplete': [
+                    {
+                        $search: {
+                            index: "bigProductSearchAutocomplete",
+                            autocomplete: {
+                                query: "삼성",
+                                path: "name"
+                            }
+                        }
+                    },
+                    { $limit: 10 }
                 ]
             };
 
@@ -1811,6 +2026,95 @@ db.collection.aggregate([
                             '대신 MongoDB Atlas UI에서 직접 확인하세요:\n' +
                             '1. Atlas 콘솔 → Search → Indexes\n' +
                             '2. Index가 없으면 "해결 방법 2"에서 Index 생성 방법을 확인하세요.');
+                    } else {
+                        showError(resultBox, data.error, data.hint);
+                    }
+                }
+            } catch (error) {
+                console.error('❌ 요청 중 오류 발생:', error);
+                console.log('='.repeat(60));
+                showError(resultBox, '서버와 통신하는 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        async function executeGetIndexesForExample5(collection) {
+            // localStorage에서 먼저 읽기
+            let connectionString = localStorage.getItem('atlasDemoConnectionString');
+            let dbName = localStorage.getItem('atlasDemoDbName');
+            
+            // 없으면 입력 필드에서 읽기
+            const connectionStringInput = document.getElementById('connectionString');
+            const dbNameInput = document.getElementById('dbName');
+            
+            if (!connectionString && connectionStringInput) {
+                connectionString = connectionStringInput.value.trim();
+            }
+            if (!dbName && dbNameInput) {
+                dbName = dbNameInput.value.trim();
+            }
+            
+            connectionString = connectionString ? connectionString.trim() : '';
+            dbName = dbName ? dbName.trim() : '';
+            
+            // 예제 5 전용 결과 박스 ID 사용
+            const resultBox = document.getElementById('result-indexes-bigProducts-example5');
+            
+            if (!connectionString || !dbName) {
+                showError(resultBox, '연결 정보를 입력하세요.', '상단의 연결 정보 입력 폼에 MongoDB Atlas 연결 문자열과 데이터베이스 이름을 입력해주세요.');
+                return;
+            }
+
+            // 연결 문자열 형식 검증
+            if (!connectionString.startsWith('mongodb://') && !connectionString.startsWith('mongodb+srv://')) {
+                showError(resultBox, '올바른 연결 문자열 형식이 아닙니다.', '연결 문자열은 mongodb:// 또는 mongodb+srv://로 시작해야 합니다.');
+                return;
+            }
+
+            resultBox.classList.remove('show', 'success', 'error');
+            resultBox.classList.add('show');
+            resultBox.innerHTML = '<div class="result-header">실행 중...</div><div class="loading"></div>';
+
+            try {
+                const response = await fetch('/api/execute-query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        connectionString,
+                        dbName,
+                        collection: collection,
+                        query: null,
+                        queryType: 'getSearchIndexes'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Index 목록이 비어있으면 안내 메시지 추가
+                    if (Array.isArray(data.result) && data.result.length === 0) {
+                        showSuccess(resultBox, data.result, data.executionTime, data.resultCount);
+                        // 결과 박스에 추가 안내 메시지 표시
+                        setTimeout(() => {
+                            const resultBoxContent = resultBox.innerHTML;
+                            resultBox.innerHTML = resultBoxContent + 
+                                '<div style="margin-top: 12px; padding: 12px; background: rgba(255, 193, 7, 0.1); border-left: 3px solid #FFC107; border-radius: 4px;">' +
+                                '<p style="color: #FFC107; margin: 0; font-size: 14px;"><strong>⚠️ Search Index가 없습니다.</strong></p>' +
+                                '<p style="color: #B8C5D1; margin: 8px 0 0 0; font-size: 13px;">아래 "Index 생성" 섹션에서 Index 생성 방법을 확인하세요.</p>' +
+                                '</div>';
+                        }, 100);
+                    } else {
+                        showSuccess(resultBox, data.result, data.executionTime, data.resultCount);
+                    }
+                } else {
+                    // 에러가 발생해도 Index가 없을 수 있으므로 안내 메시지 표시
+                    if (data.error && data.error.includes('getSearchIndexes')) {
+                        showError(resultBox, 'Index 목록을 조회할 수 없습니다.', 
+                            'MongoDB 드라이버 버전 문제로 Index 목록을 조회할 수 없습니다.\n\n' +
+                            '대신 MongoDB Atlas UI에서 직접 확인하세요:\n' +
+                            '1. Atlas 콘솔 → Search → Indexes\n' +
+                            '2. Index가 없으면 아래 "Index 생성" 섹션에서 Index 생성 방법을 확인하세요.');
                     } else {
                         showError(resultBox, data.error, data.hint);
                     }
@@ -2207,6 +2511,163 @@ db.collection.aggregate([
             }
         }
 
+        async function checkIndexStatusForExample5(collection, indexName) {
+            // localStorage에서 먼저 읽기
+            let connectionString = localStorage.getItem('atlasDemoConnectionString');
+            let dbName = localStorage.getItem('atlasDemoDbName');
+            
+            // 없으면 입력 필드에서 읽기
+            const connectionStringInput = document.getElementById('connectionString');
+            const dbNameInput = document.getElementById('dbName');
+            
+            if (!connectionString && connectionStringInput) {
+                connectionString = connectionStringInput.value.trim();
+            }
+            if (!dbName && dbNameInput) {
+                dbName = dbNameInput.value.trim();
+            }
+            
+            connectionString = connectionString ? connectionString.trim() : '';
+            dbName = dbName ? dbName.trim() : '';
+            
+            // 예제 5 전용 결과 박스 ID 사용
+            const resultBox = document.getElementById('result-indexes-bigProducts-autocomplete-check');
+            
+            if (!connectionString || !dbName) {
+                showError(resultBox, '연결 정보를 입력하세요.', '상단의 연결 정보 입력 폼에 MongoDB Atlas 연결 문자열과 데이터베이스 이름을 입력해주세요.');
+                return;
+            }
+
+            // 연결 문자열 형식 검증
+            if (!connectionString.startsWith('mongodb://') && !connectionString.startsWith('mongodb+srv://')) {
+                showError(resultBox, '올바른 연결 문자열 형식이 아닙니다.', '연결 문자열은 mongodb:// 또는 mongodb+srv://로 시작해야 합니다.');
+                return;
+            }
+
+            if (connectionString.includes('localhost') || connectionString.includes('127.0.0.1') || connectionString.includes(':28000')) {
+                showError(resultBox, '연결 문자열에 localhost가 포함되어 있습니다.', 'MongoDB Atlas 연결 문자열을 사용해야 합니다.');
+                return;
+            }
+
+            resultBox.classList.remove('show', 'success', 'error');
+            resultBox.classList.add('show');
+            resultBox.innerHTML = '<div class="result-header">인덱스 상태 확인 중...</div><div class="loading"></div>';
+
+            try {
+                const response = await fetch('/api/execute-query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        connectionString,
+                        dbName,
+                        collection: collection,
+                        query: null,
+                        queryType: 'getSearchIndexes'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success && Array.isArray(data.result)) {
+                    const indexList = data.result;
+                    let targetIndexFound = false;
+                    let indexListHTML = '<div style="margin-top: 12px;">';
+                    
+                    indexList.forEach(idx => {
+                        const status = idx.status || (idx.queryable === true ? 'READY' : 'BUILDING');
+                        const statusColor = status === 'READY' ? '#00ED64' : 
+                                          status === 'BUILDING' || status === 'PENDING' ? '#FFC107' : 
+                                          status === 'FAILED' ? '#FF5252' : '#B8C5D1';
+                        const statusIcon = status === 'READY' ? '✅' : 
+                                          status === 'BUILDING' || status === 'PENDING' ? '⏳' : 
+                                          status === 'FAILED' ? '❌' : '❓';
+                        
+                        if (idx.name === indexName) {
+                            targetIndexFound = true;
+                        }
+                        
+                        indexListHTML += `
+                            <div style="margin-bottom: 16px; padding: 12px; background: rgba(0, 0, 0, 0.2); border-radius: 4px; border-left: 3px solid ${statusColor};">
+                                <p style="color: ${statusColor}; margin: 0 0 8px 0; font-size: 15px; font-weight: bold;">
+                                    ${statusIcon} <strong>${idx.name || '이름 없음'}</strong> - 상태: <strong>${status}</strong>
+                                </p>
+                                ${status === 'READY' ? 
+                                    '<p style="color: #00ED64; margin: 4px 0; font-size: 13px;">✅ Index가 준비되었습니다. 검색 쿼리를 실행할 수 있습니다.</p>' :
+                                    status === 'BUILDING' || status === 'PENDING' ?
+                                    '<p style="color: #FFC107; margin: 4px 0; font-size: 13px;">⏳ Index가 생성 중입니다. 몇 분 후 다시 확인하세요. (이름: ' + (idx.name || '알 수 없음') + ', 상태: ' + status + ')</p>' :
+                                    status === 'FAILED' ?
+                                    '<p style="color: #FF5252; margin: 4px 0; font-size: 13px;">❌ Index 생성에 실패했습니다. Atlas UI에서 확인하세요.</p>' :
+                                    '<p style="color: #B8C5D1; margin: 4px 0; font-size: 13px;">❓ Index 상태를 확인할 수 없습니다. (이름: ' + (idx.name || '알 수 없음') + ')</p>'
+                                }
+                                <details style="margin-top: 8px;">
+                                    <summary style="color: #B8C5D1; font-size: 12px; cursor: pointer;">상세 정보 보기</summary>
+                                    <pre style="margin-top: 8px; padding: 8px; background: rgba(0, 0, 0, 0.3); border-radius: 4px; font-size: 11px; overflow-x: auto;">${JSON.stringify(idx, null, 2)}</pre>
+                                </details>
+                            </div>
+                        `;
+                    });
+                    
+                    indexListHTML += '</div>';
+                    
+                    resultBox.classList.remove('error');
+                    resultBox.classList.add('success', 'show', 'collapsed');
+                    resultBox.innerHTML = `
+                        <div class="result-header" onclick="toggleResultBox(this)">
+                            <span>인덱스 목록 및 상태 확인 완료</span>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="result-content">
+                            <p style="color: #B8C5D1; margin: 8px 0; font-size: 14px;">총 <strong>${indexList.length}</strong>개의 Index가 있습니다.</p>
+                            ${targetIndexFound ? 
+                                `<p style="color: #00ED64; margin: 8px 0; font-size: 14px;">✅ 찾고 있는 Index '${indexName}'가 목록에 있습니다.</p>` :
+                                indexName ? 
+                                `<p style="color: #FFC107; margin: 8px 0; font-size: 14px;">⚠️ 찾고 있는 Index '${indexName}'가 목록에 없습니다. Index 이름을 확인하세요.</p>` :
+                                ''
+                            }
+                            ${indexListHTML}
+                        </div>
+                    `;
+                } else {
+                    // 에러가 발생한 경우
+                    let errorMessage = data.error || 'Index 목록을 조회할 수 없습니다.';
+                    let errorHint = data.hint || '';
+                    
+                    if (data.error && (data.error.includes('getSearchIndexes') || data.error.includes('Search Index'))) {
+                        errorHint = 'MongoDB 드라이버를 통한 Index 목록 조회에 실패했습니다.\n\n' +
+                            '가능한 원인:\n' +
+                            '1. Index가 아직 생성되지 않았을 수 있습니다.\n' +
+                            '2. Index가 생성 중(BUILDING)일 수 있습니다.\n' +
+                            '3. MongoDB 드라이버 버전 문제일 수 있습니다.\n\n' +
+                            '해결 방법:\n' +
+                            '1. MongoDB Atlas UI에서 직접 확인하세요:\n' +
+                            '   - Atlas 콘솔 → Search → Indexes\n' +
+                            '   - Index 이름과 상태를 확인하세요\n' +
+                            '2. Index가 BUILDING 상태면 몇 분 후 다시 확인하세요.\n' +
+                            '3. Index가 없으면 아래 "Index 생성" 섹션에서 Index 생성 방법을 확인하세요.';
+                    }
+                    
+                    resultBox.classList.remove('success');
+                    resultBox.classList.add('error', 'show', 'collapsed');
+                    resultBox.innerHTML = `
+                        <div class="result-header" onclick="toggleResultBox(this)">
+                            <span>인덱스 상태 확인 완료</span>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="result-content">
+                            <p style="color: #FF5252; margin: 8px 0; font-size: 16px; font-weight: bold;">❌ ${errorMessage}</p>
+                            <p style="color: #B8C5D1; margin: 8px 0; font-size: 14px; white-space: pre-line;">${errorHint}</p>
+                            <p style="color: #7A8B99; margin: 8px 0; font-size: 12px; margin-top: 12px;">💡 팁: Index가 생성 중이면 Atlas UI에서 이름과 상태를 확인할 수 있습니다.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('❌ 인덱스 상태 확인 중 오류 발생:', error);
+                showError(resultBox, '서버와 통신하는 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+
         async function checkIndexSize(collection, indexType) {
             // localStorage에서 먼저 읽기
             let connectionString = localStorage.getItem('atlasDemoConnectionString');
@@ -2245,7 +2706,7 @@ db.collection.aggregate([
 
             try {
                 // 인덱스 이름 결정 (dynamic 또는 static)
-                const indexName = indexType === 'dynamic' ? 'bigProductSearchDynamic' : 'bigProductSearch';
+                const indexName = indexType === 'dynamic' ? 'bigProductSearchDynamic' : 'bigProductSearchStatic';
                 
                 const response = await fetch('/api/execute-query', {
                     method: 'POST',
@@ -2335,6 +2796,58 @@ db.collection.aggregate([
                 showError(resultBox, '서버와 통신하는 중 오류가 발생했습니다: ' + error.message);
             }
         }
+
+        // 코드 복사 기능
+        function copyCodeToClipboard(button, codeText) {
+            navigator.clipboard.writeText(codeText).then(() => {
+                const originalText = button.textContent;
+                button.textContent = '복사됨!';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('복사 실패:', err);
+                alert('복사에 실패했습니다. 수동으로 복사해주세요.');
+            });
+        }
+
+        // 모든 코드 블록에 복사 버튼 추가
+        function addCopyButtonsToCodeBlocks() {
+            const codeBlocks = document.querySelectorAll('.code-block');
+            codeBlocks.forEach((block, index) => {
+                // 이미 복사 버튼이 있으면 스킵
+                if (block.querySelector('.copy-btn')) {
+                    return;
+                }
+
+                const codeElement = block.querySelector('code');
+                if (codeElement) {
+                    const codeText = codeElement.textContent || codeElement.innerText;
+                    const copyButton = document.createElement('button');
+                    copyButton.className = 'copy-btn';
+                    copyButton.textContent = '복사';
+                    copyButton.onclick = () => copyCodeToClipboard(copyButton, codeText);
+                    block.appendChild(copyButton);
+                }
+            });
+        }
+
+        // 페이지 로드 시 복사 버튼 추가
+        document.addEventListener('DOMContentLoaded', () => {
+            addCopyButtonsToCodeBlocks();
+        });
+
+        // 동적으로 추가되는 코드 블록에도 복사 버튼 추가를 위해 MutationObserver 사용
+        const observer = new MutationObserver(() => {
+            addCopyButtonsToCodeBlocks();
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
     </script>
 </body>
 </html>
