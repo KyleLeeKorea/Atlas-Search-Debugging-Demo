@@ -95,6 +95,368 @@ export function generateLargeSampleData() {
   return { products, articles };
 }
 
+// game_chat 컬렉션용 다국어 샘플 데이터 생성 함수
+export function generateGameChatData() {
+  const chineseNames = ["黑王子", "白騎士", "紅法師", "藍戰士", "綠盜賊", "黃祭司", "紫巫師", "銀劍士", "金弓手", "銅盾士"];
+  const englishWords = ["hight", "power", "sword", "shield", "magic", "arrow", "spell", "heal", "buff", "debuff"];
+  const koreanWords = ["공격", "방어", "마법", "치유", "버프", "디버프", "스킬", "아이템", "퀘스트", "던전"];
+  const messages = [
+    "게임을 시작합니다",
+    "전투가 시작되었습니다",
+    "아이템을 획득했습니다",
+    "경험치를 얻었습니다",
+    "레벨업했습니다",
+    "퀘스트를 완료했습니다",
+    "던전에 입장했습니다",
+    "보스를 처치했습니다",
+    "파티에 참가했습니다",
+    "채팅을 입력했습니다"
+  ];
+  const chineseMessages = [
+    "開始遊戲",
+    "戰鬥開始",
+    "獲得物品",
+    "獲得經驗",
+    "升級了",
+    "完成任務",
+    "進入地下城",
+    "擊敗首領",
+    "加入隊伍",
+    "輸入聊天"
+  ];
+  const englishMessages = [
+    "Game started",
+    "Battle begins",
+    "Item acquired",
+    "Gained experience",
+    "Level up",
+    "Quest completed",
+    "Entered dungeon",
+    "Boss defeated",
+    "Joined party",
+    "Chat message"
+  ];
+
+  const gameChats = [];
+
+  for (let i = 1; i <= 100; i++) {
+    const nameType = Math.floor(Math.random() * 3); // 0: 한자+영문, 1: 한자+한글, 2: 영문+한글
+    let playerName;
+    
+    if (nameType === 0) {
+      // 한자 + 영문 조합 (예: 黑王子hight)
+      const chinese = chineseNames[Math.floor(Math.random() * chineseNames.length)];
+      const english = englishWords[Math.floor(Math.random() * englishWords.length)];
+      playerName = `${chinese}${english}`;
+    } else if (nameType === 1) {
+      // 한자 + 한글 조합
+      const chinese = chineseNames[Math.floor(Math.random() * chineseNames.length)];
+      const korean = koreanWords[Math.floor(Math.random() * koreanWords.length)];
+      playerName = `${chinese}${korean}`;
+    } else {
+      // 영문 + 한글 조합
+      const english = englishWords[Math.floor(Math.random() * englishWords.length)];
+      const korean = koreanWords[Math.floor(Math.random() * koreanWords.length)];
+      playerName = `${english}${korean}`;
+    }
+
+    // 메시지 타입 결정
+    const messageType = Math.floor(Math.random() * 3);
+    let message;
+    if (messageType === 0) {
+      message = messages[Math.floor(Math.random() * messages.length)];
+    } else if (messageType === 1) {
+      message = chineseMessages[Math.floor(Math.random() * chineseMessages.length)];
+    } else {
+      message = englishMessages[Math.floor(Math.random() * englishMessages.length)];
+    }
+
+    gameChats.push({
+      _id: i,
+      playerName: playerName,
+      message: message,
+      timestamp: new Date(2024, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1, 
+                         Math.floor(Math.random() * 24), Math.floor(Math.random() * 60)),
+      channel: ["일반", "파티", "길드", "전체"][Math.floor(Math.random() * 4)],
+      level: Math.floor(Math.random() * 100) + 1,
+      server: `서버${Math.floor(Math.random() * 10) + 1}`
+    });
+  }
+
+  // 특정 테스트 데이터 추가 (다국어 검색 테스트용)
+  const testData = [
+    {
+      _id: 101,
+      playerName: "黑王子hight",
+      message: "게임을 시작합니다",
+      timestamp: new Date(2024, 11, 18, 12, 0),
+      channel: "일반",
+      level: 50,
+      server: "서버1"
+    },
+    {
+      _id: 102,
+      playerName: "白王子hight",
+      message: "전투가 시작되었습니다",
+      timestamp: new Date(2024, 11, 18, 12, 5),
+      channel: "파티",
+      level: 45,
+      server: "서버1"
+    },
+    {
+      _id: 103,
+      playerName: "playerhight",
+      message: "아이템을 획득했습니다",
+      timestamp: new Date(2024, 11, 18, 12, 10),
+      channel: "일반",
+      level: 30,
+      server: "서버2"
+    },
+    {
+      _id: 104,
+      playerName: "hightscore",
+      message: "경험치를 얻었습니다",
+      timestamp: new Date(2024, 11, 18, 12, 15),
+      channel: "길드",
+      level: 60,
+      server: "서버1"
+    },
+    {
+      _id: 105,
+      playerName: "hightlevel",
+      message: "레벨업했습니다",
+      timestamp: new Date(2024, 11, 18, 12, 20),
+      channel: "일반",
+      level: 75,
+      server: "서버3"
+    },
+    {
+      _id: 106,
+      playerName: "hightpower",
+      message: "퀘스트를 완료했습니다",
+      timestamp: new Date(2024, 11, 18, 12, 25),
+      channel: "파티",
+      level: 55,
+      server: "서버2"
+    },
+    {
+      _id: 107,
+      playerName: "superhight",
+      message: "던전에 입장했습니다",
+      timestamp: new Date(2024, 11, 18, 12, 30),
+      channel: "일반",
+      level: 40,
+      server: "서버1"
+    },
+    {
+      _id: 108,
+      playerName: "hightmaster",
+      message: "보스를 처치했습니다",
+      timestamp: new Date(2024, 11, 18, 12, 35),
+      channel: "길드",
+      level: 80,
+      server: "서버2"
+    },
+    {
+      _id: 109,
+      playerName: "hi왕자",
+      message: "게임을 시작합니다",
+      timestamp: new Date(2024, 11, 18, 12, 40),
+      channel: "일반",
+      level: 50,
+      server: "서버1"
+    },
+    {
+      _id: 110,
+      playerName: "hi기사",
+      message: "전투가 시작되었습니다",
+      timestamp: new Date(2024, 11, 18, 12, 45),
+      channel: "파티",
+      level: 45,
+      server: "서버1"
+    },
+    {
+      _id: 111,
+      playerName: "hi마법사",
+      message: "아이템을 획득했습니다",
+      timestamp: new Date(2024, 11, 18, 12, 50),
+      channel: "일반",
+      level: 30,
+      server: "서버2"
+    },
+    {
+      _id: 112,
+      playerName: "hi전사",
+      message: "경험치를 얻었습니다",
+      timestamp: new Date(2024, 11, 18, 12, 55),
+      channel: "길드",
+      level: 60,
+      server: "서버1"
+    },
+    {
+      _id: 113,
+      playerName: "hi도적",
+      message: "레벨업했습니다",
+      timestamp: new Date(2024, 11, 18, 13, 0),
+      channel: "일반",
+      level: 75,
+      server: "서버3"
+    },
+    {
+      _id: 114,
+      playerName: "hi사제",
+      message: "퀘스트를 완료했습니다",
+      timestamp: new Date(2024, 11, 18, 13, 5),
+      channel: "파티",
+      level: 55,
+      server: "서버2"
+    },
+    {
+      _id: 115,
+      playerName: "hi검사",
+      message: "던전에 입장했습니다",
+      timestamp: new Date(2024, 11, 18, 13, 10),
+      channel: "일반",
+      level: 40,
+      server: "서버1"
+    },
+    {
+      _id: 116,
+      playerName: "hi궁수",
+      message: "보스를 처치했습니다",
+      timestamp: new Date(2024, 11, 18, 13, 15),
+      channel: "길드",
+      level: 80,
+      server: "서버2"
+    },
+    {
+      _id: 117,
+      playerName: "hi방패사",
+      message: "게임을 시작합니다",
+      timestamp: new Date(2024, 11, 18, 13, 20),
+      channel: "일반",
+      level: 50,
+      server: "서버1"
+    },
+    {
+      _id: 118,
+      playerName: "hi친구",
+      message: "전투가 시작되었습니다",
+      timestamp: new Date(2024, 11, 18, 13, 25),
+      channel: "파티",
+      level: 45,
+      server: "서버1"
+    }
+  ];
+
+  gameChats.push(...testData);
+
+  return gameChats;
+}
+
+// game_hanchat 컬렉션용 순수 한글 샘플 데이터 생성 함수
+export function generateGameHanChatData() {
+  const koreanNames = [
+    "검은왕자", "흰기사", "빨간마법사", "파란전사", "초록도적", 
+    "노란사제", "보라마법사", "은빛검사", "금빛궁수", "구리방패사",
+    "불꽃전사", "얼음마법사", "번개도적", "바람궁수", "대지사제",
+    "어둠기사", "빛의성기사", "어둠의마법사", "자연의드루이드", "죽음의기사"
+  ];
+  const koreanWords = ["공격", "방어", "마법", "치유", "버프", "디버프", "스킬", "아이템", "퀘스트", "던전"];
+  const messages = [
+    "게임을 시작합니다",
+    "전투가 시작되었습니다",
+    "아이템을 획득했습니다",
+    "경험치를 얻었습니다",
+    "레벨업했습니다",
+    "퀘스트를 완료했습니다",
+    "던전에 입장했습니다",
+    "보스를 처치했습니다",
+    "파티에 참가했습니다",
+    "채팅을 입력했습니다",
+    "무기를 강화했습니다",
+    "장비를 교체했습니다",
+    "스킬을 배웠습니다",
+    "포션을 사용했습니다",
+    "길드를 가입했습니다"
+  ];
+
+  const gameHanChats = [];
+
+  // 순수 한글 플레이어 이름 생성
+  for (let i = 1; i <= 100; i++) {
+    const namePart1 = koreanNames[Math.floor(Math.random() * koreanNames.length)];
+    const namePart2 = koreanWords[Math.floor(Math.random() * koreanWords.length)];
+    const playerName = `${namePart1}${namePart2}`;
+
+    const message = messages[Math.floor(Math.random() * messages.length)];
+
+    gameHanChats.push({
+      _id: i,
+      playerName: playerName,
+      message: message,
+      timestamp: new Date(2024, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1, 
+                         Math.floor(Math.random() * 24), Math.floor(Math.random() * 60)),
+      channel: ["일반", "파티", "길드", "전체"][Math.floor(Math.random() * 4)],
+      level: Math.floor(Math.random() * 100) + 1,
+      server: `서버${Math.floor(Math.random() * 10) + 1}`
+    });
+  }
+
+  // 특정 테스트 데이터 추가 (한글 검색 테스트용)
+  const testData = [
+    {
+      _id: 101,
+      playerName: "검은왕자공격",
+      message: "게임을 시작합니다",
+      timestamp: new Date(2024, 11, 18, 12, 0),
+      channel: "일반",
+      level: 50,
+      server: "서버1"
+    },
+    {
+      _id: 102,
+      playerName: "흰기사방어",
+      message: "전투가 시작되었습니다",
+      timestamp: new Date(2024, 11, 18, 12, 5),
+      channel: "파티",
+      level: 45,
+      server: "서버1"
+    },
+    {
+      _id: 103,
+      playerName: "빨간마법사마법",
+      message: "아이템을 획득했습니다",
+      timestamp: new Date(2024, 11, 18, 12, 10),
+      channel: "일반",
+      level: 30,
+      server: "서버2"
+    },
+    {
+      _id: 104,
+      playerName: "王子hi",
+      message: "게임을 시작합니다",
+      timestamp: new Date(2024, 11, 18, 12, 15),
+      channel: "일반",
+      level: 50,
+      server: "서버1"
+    },
+    {
+      _id: 105,
+      playerName: "王子hello",
+      message: "전투가 시작되었습니다",
+      timestamp: new Date(2024, 11, 18, 12, 20),
+      channel: "파티",
+      level: 45,
+      server: "서버1"
+    }
+  ];
+
+  gameHanChats.push(...testData);
+
+  return gameHanChats;
+}
+
 // 기존 샘플 데이터 (호환성을 위해 유지)
 export const sampleProducts = [
   {
@@ -266,6 +628,21 @@ export const sampleProducts = [
     },
     inStock: true,
     rating: 4.7
+  },
+  {
+    _id: 11,
+    name: "黑王子hight",
+    description: "다국어 환경 테스트용 제품입니다. 한자와 영문이 혼합된 제품명으로 검색 기능을 테스트할 수 있습니다.",
+    category: "테스트",
+    brand: "테스트",
+    price: 100000,
+    tags: ["테스트", "다국어", "검색"],
+    specifications: {
+      type: "테스트 제품",
+      color: "블랙"
+    },
+    inStock: true,
+    rating: 4.0
   }
 ];
 

@@ -188,6 +188,52 @@
             color: #FFFFFF;
         }
 
+        .custom-query-section {
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(0, 150, 255, 0.05);
+            border: 1px solid rgba(0, 150, 255, 0.2);
+            border-radius: 6px;
+        }
+
+        .custom-query-textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            color: #B8C5D1;
+            resize: vertical;
+            white-space: pre;
+            overflow-x: auto;
+        }
+
+        .custom-query-textarea:focus {
+            outline: none;
+            border-color: #0096FF;
+        }
+
+        .edit-query-btn {
+            background: rgba(0, 150, 255, 0.2);
+            border: 1px solid rgba(0, 150, 255, 0.4);
+            color: #0096FF;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 8px;
+            transition: all 0.2s;
+        }
+
+        .edit-query-btn:hover {
+            background: rgba(0, 150, 255, 0.3);
+            border-color: #0096FF;
+        }
+
         .execute-btn {
             background: #00ED64;
             color: #001E2B;
@@ -390,7 +436,7 @@
             <button class="tab active" onclick="showTab(0)">시나리오 1: 검색 결과 0건</button>
             <button class="tab" onclick="showTab(1)">시나리오 2: 기대와 다른 결과</button>
             <button class="tab" onclick="showTab(2)">시나리오 3: 성능 문제</button>
-            <button class="tab" onclick="showTab(3)">시나리오 4: Index 변경</button>
+            <button class="tab" onclick="showTab(3)">시나리오 4: 다국어 환경</button>
             <button class="tab" onclick="showTab(4)">시나리오 5: 운영 환경</button>
             <button class="tab" onclick="showTab(5)">체크리스트</button>
         </div>
@@ -413,6 +459,20 @@
                     </div>
                     <button class="execute-btn" onclick="executeQuery('scenario1-1')">쿼리 실행</button>
                     <div class="result-box" id="result-scenario1-1"></div>
+                    
+                    <div class="custom-query-section">
+                        <p style="color: #0096FF; font-size: 13px; margin: 0 0 8px 0; font-weight: 600;">✏️ 쿼리 편집 및 실행</p>
+                        <textarea class="custom-query-textarea" id="custom-query-scenario1-1" placeholder="쿼리를 입력하세요...">db.products.aggregate([
+  {
+    $search: {
+      index: "productSearch",
+      text: { query: "갤럭시", path: "name" }
+    }
+  }
+])</textarea>
+                        <button class="edit-query-btn" onclick="executeCustomQuery('scenario1-1', 'products')">수정된 쿼리 실행</button>
+                        <div class="result-box" id="result-custom-scenario1-1" style="margin-top: 12px;"></div>
+                    </div>
                 </div>
                 <div class="solution-box">
                     <p><strong>해결 방법 1:</strong> Index 목록 확인</p>
@@ -1199,19 +1259,406 @@ db.bigProducts.getSearchIndexes()</code>
             </div>
         </div>
 
-        <!-- 시나리오 4: Index 변경 -->
+        <!-- 시나리오 4: 다국어 환경 -->
         <div class="tab-content">
             <div class="scenario">
-                <h2>시나리오 4: Index 변경 후 결과가 이상한 경우</h2>
-                
-                <h3>문제 1: Index Status 확인</h3>
-                <div class="solution-box">
-                    <p><strong>디버깅:</strong> Index Status 확인 (BUILDING / READY / FAILED)</p>
-                    <div class="code-block">
-                        <code>db.products.getSearchIndexes()</code>
+                <h2>시나리오 4: 다국어 환경에서의 검색 문제</h2>
+                <p style="color: #B8C5D1; font-size: 14px; margin: 16px 0;">
+                    한자, 영문, 한글이 혼합된 다국어 데이터에서 부분 검색이 제대로 작동하지 않는 경우
+                </p>
+
+                <div class="solution-box" style="margin-bottom: 30px; background: rgba(0, 150, 255, 0.1); border: 1px solid rgba(0, 150, 255, 0.3);">
+                    <p><strong>📥 샘플 데이터 로드</strong></p>
+                    <p style="color: #B8C5D1; font-size: 13px; margin: 8px 0;">
+                        시나리오 4를 실행하기 전에 <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_chat</code> 컬렉션과 <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_hanchat</code> 컬렉션에 샘플 데이터를 로드해야 합니다.
+                    </p>
+                    <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">
+                        💡 <strong>참고:</strong> 이 버튼을 클릭하면 <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_chat</code> 컬렉션에 다국어 샘플 데이터 100건과 <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_hanchat</code> 컬렉션에 순수 한글 샘플 데이터가 로드됩니다. 기존 컬렉션은 삭제되고 새로 생성됩니다.
+                    </p>
+                    <button class="execute-btn" onclick="loadSampleDataForScenario4()" style="margin-top: 12px;">샘플 데이터 로드</button>
+                    <div class="result-box" id="result-load-data-scenario4" style="margin-top: 12px;"></div>
+                </div>
+
+                <div class="solution-box" style="margin-bottom: 30px;">
+                    <p><strong>⚠️ 사전 준비: 다국어 검색 Index 확인 및 생성</strong></p>
+                    <p style="color: #B8C5D1; font-size: 13px; margin: 8px 0;">
+                        시나리오 4는 <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_chat</code> 컬렉션과 <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">gameChatSearchMultilingual</code> 인덱스를 사용합니다.
+                    </p>
+                    <div class="solution-box" style="margin-top: 16px;">
+                        <p><strong>1. Index 목록 확인</strong></p>
+                        <p style="color: #B8C5D1; font-size: 13px; margin: 8px 0;">
+                            <strong>game_chat 컬렉션:</strong>
+                        </p>
+                        <div class="code-block">
+                            <code>// Index 목록 확인
+db.game_chat.getSearchIndexes()</code>
+                        </div>
+                        <button class="execute-btn" onclick="executeGetIndexes('game_chat')">game_chat Index 목록 조회</button>
+                        <div class="result-box" id="result-indexes-game_chat"></div>
+                        
+                        <p style="color: #B8C5D1; font-size: 13px; margin: 16px 0 8px 0;">
+                            <strong>game_hanchat 컬렉션:</strong>
+                        </p>
+                        <div class="code-block">
+                            <code>// Index 목록 확인
+db.game_hanchat.getSearchIndexes()</code>
+                        </div>
+                        <button class="execute-btn" onclick="executeGetIndexes('game_hanchat')">game_hanchat Index 목록 조회</button>
+                        <div class="result-box" id="result-indexes-game_hanchat"></div>
                     </div>
-                    <button class="execute-btn" onclick="executeGetIndexes('products')">Index Status 확인</button>
-                    <div class="result-box" id="result-scenario4-1"></div>
+                    <div class="solution-box" style="margin-top: 20px;">
+                        <p><strong>2. Index 생성</strong></p>
+                        <p style="color: #B8C5D1; font-size: 13px; margin: 8px 0; padding: 8px; background: rgba(255, 193, 7, 0.1); border-left: 3px solid #FFC107; border-radius: 4px;">
+                            <strong>❌ Before 인덱스 (문제 있는 설정):</strong> lucene.korean analyzer 사용
+                        </p>
+                        <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">MongoDB Atlas UI에서 Search Index를 생성하세요:</p>
+                        <div class="code-block">
+                            <code>{
+  "mappings": {
+    "dynamic": false,
+    "fields": {
+      "playerName": {
+        "type": "string",
+        "analyzer": "lucene.korean"
+      }
+    }
+  }
+}</code>
+                        </div>
+                        <p style="color: #B8C5D1; font-size: 14px; margin: 12px 0;">
+                            <strong>Index 이름:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">gameChatSearchKorean</code>
+                        </p>
+                        <p style="color: #B8C5D1; font-size: 14px; margin: 12px 0;">
+                            <strong>Database:</strong> 사용 중인 데이터베이스 이름
+                        </p>
+                        <p style="color: #B8C5D1; font-size: 14px; margin: 12px 0;">
+                            <strong>Collection:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_chat</code>
+                        </p>
+                        <p style="color: #B8C5D1; font-size: 13px; margin-top: 12px; padding: 12px; background: rgba(0, 150, 255, 0.1); border-left: 3px solid #0096FF; border-radius: 4px;">
+                            💡 <strong>참고:</strong> Before 인덱스는 선택 사항이며, 성능 비교를 위해 생성할 수 있습니다.
+                        </p>
+                    </div>
+                    <div class="solution-box" style="margin-top: 20px;">
+                        <p><strong>✅ After 인덱스 (올바른 설정):</strong> lucene.standard analyzer 사용</p>
+                        <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">MongoDB Atlas UI에서 Search Index를 생성하세요:</p>
+                        <ol style="color: #B8C5D1; font-size: 14px; margin: 12px 0; padding-left: 20px;">
+                            <li>MongoDB Atlas 콘솔에 로그인</li>
+                            <li>왼쪽 메뉴에서 <strong>Search</strong> 클릭</li>
+                            <li><strong>Create Search Index</strong> 버튼 클릭</li>
+                            <li><strong>JSON Editor</strong> 선택</li>
+                            <li>아래 JSON을 복사하여 붙여넣기:</li>
+                        </ol>
+                        <div class="code-block">
+                            <code>{
+  "mappings": {
+    "dynamic": false,
+    "fields": {
+      "playerName": {
+        "type": "string",
+        "analyzer": "lucene.standard"
+      }
+    }
+  }
+}</code>
+                        </div>
+                        <p style="color: #B8C5D1; font-size: 14px; margin: 12px 0;">
+                            <strong>Index 이름:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">gameChatSearchMultilingual</code>
+                        </p>
+                        <p style="color: #B8C5D1; font-size: 14px; margin: 12px 0;">
+                            <strong>Database:</strong> 사용 중인 데이터베이스 이름
+                        </p>
+                        <p style="color: #B8C5D1; font-size: 14px; margin: 12px 0;">
+                            <strong>Collection:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_chat</code>
+                        </p>
+                        <p style="color: #B8C5D1; font-size: 13px; margin-top: 12px; padding: 12px; background: rgba(0, 150, 255, 0.1); border-left: 3px solid #0096FF; border-radius: 4px;">
+                            💡 <strong>참고:</strong> Index 생성 후 BUILDING 상태에서 READY 상태로 변경되는데 몇 분이 걸릴 수 있습니다. READY 상태가 되면 쿼리를 실행할 수 있습니다.
+                        </p>
+                        <button class="execute-btn" onclick="checkIndexStatus('game_chat', 'gameChatSearchMultilingual')" style="margin-top: 16px;">인덱스 생성 확인</button>
+                        <div class="result-box" id="result-indexes-game_chat-check"></div>
+                    </div>
+                </div>
+
+                <h3>문제: 한글 전용 환경 vs 다국어 환경에서의 검색 차이</h3>
+                <div class="problem-box">
+                    <p><strong>증상:</strong> 한글 전용 컬렉션(<code>game_hanchat</code>)에서는 <code>lucene.korean</code> analyzer가 잘 작동하지만, 다국어 컬렉션(<code>game_chat</code>)에서는 한자와 영문 혼합 검색이 제대로 작동하지 않음</p>
+                    <p style="color: #FFC107; font-size: 13px; margin: 12px 0; padding: 8px; background: rgba(255, 193, 7, 0.1); border-left: 3px solid #FFC107; border-radius: 4px;">
+                        <strong>문제 원인:</strong> <code>lucene.korean</code> analyzer는 한글에 최적화되어 있어 한자와 영문 혼합 검색에 부적합합니다. 다국어 환경에서는 <code>lucene.standard</code> analyzer를 사용해야 합니다.
+                    </p>
+                </div>
+
+                <div class="solution-box" style="margin-top: 20px;">
+                    <p><strong>❌ Before (한글 전용 컬렉션 - 정상 동작)</strong></p>
+                    <p style="color: #00ED64; font-size: 13px; margin: 8px 0; padding: 8px; background: rgba(0, 237, 100, 0.1); border-left: 3px solid #00ED64; border-radius: 4px;">
+                        <strong>설명:</strong> <code>game_hanchat</code> 컬렉션은 순수 한글로만 이루어진 데이터를 사용하며, <code>lucene.korean</code> analyzer가 한글 검색에 최적화되어 있어 정상적으로 작동합니다.
+                    </p>
+                    <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">
+                        <strong>컬렉션:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_hanchat</code> (순수 한글 데이터)
+                    </p>
+                    <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">
+                        <strong>인덱스:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">gameHanChatSearchKorean</code> (lucene.korean analyzer)
+                    </p>
+                    <div class="code-block">
+                        <code>db.game_hanchat.aggregate([
+  {
+    $search: {
+      index: "gameHanChatSearchKorean",
+      text: { 
+        query: "검은왕자",
+        path: "playerName"
+      }
+    }
+  },
+  {
+    $addFields: {
+      score: { $meta: "searchScore" }
+    }
+  },
+  {
+    $sort: { score: -1 }
+  }
+])</code>
+                    </div>
+                    <button class="execute-btn" onclick="executeQuery('scenario4-1-before')">Before 쿼리 실행</button>
+                    <div class="result-box" id="result-scenario4-1-before"></div>
+                </div>
+
+                <div class="solution-box" style="margin-top: 20px;">
+                    <p><strong>✅ After (다국어 컬렉션 - 해결 방법)</strong></p>
+                    <p style="color: #00ED64; font-size: 13px; margin: 8px 0; padding: 8px; background: rgba(0, 237, 100, 0.1); border-left: 3px solid #00ED64; border-radius: 4px;">
+                        <strong>해결:</strong> <code>game_chat</code> 컬렉션은 한자, 영문, 한글이 혼합된 다국어 데이터를 사용하므로, <code>lucene.standard</code> analyzer를 사용해야 합니다.
+                    </p>
+                    <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">
+                        <strong>컬렉션:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_chat</code> (다국어 데이터)
+                    </p>
+                    <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">
+                        <strong>인덱스:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">gameChatSearchMultilingual</code> (lucene.standard analyzer)
+                    </p>
+                    <div class="code-block">
+                        <code>db.game_chat.aggregate([
+  {
+    $search: {
+      index: "gameChatSearchMultilingual",
+      text: { 
+        query: "王子hi",
+        path: "playerName"
+      }
+    }
+  },
+  {
+    $addFields: {
+      score: { $meta: "searchScore" }
+    }
+  },
+  {
+    $sort: { score: -1 }
+  }
+])</code>
+                    </div>
+                    <button class="execute-btn" onclick="executeQuery('scenario4-1-after')">After 쿼리 실행</button>
+                    <div class="result-box" id="result-scenario4-1-after"></div>
+                </div>
+
+                <div class="solution-box" style="margin-top: 20px;">
+                    <p><strong>📝 실제 데이터 예제</strong></p>
+                    <p style="color: #B8C5D1; font-size: 13px; margin: 8px 0; padding: 8px; background: rgba(0, 150, 255, 0.1); border-left: 3px solid #0096FF; border-radius: 4px;">
+                        <strong>Before 컬렉션:</strong> 아래 쿼리로 "검은왕자공격" 플레이어를 확인할 수 있습니다.
+                    </p>
+                    <div class="code-block">
+                        <code>db.game_hanchat.find({ playerName: "검은왕자공격" })</code>
+                    </div>
+                    <button class="execute-btn" onclick="executeFind('game_hanchat', { playerName: '검은왕자공격' }, 'result-scenario4-1-data-before')">Before 데이터 확인</button>
+                    <div class="result-box" id="result-scenario4-1-data-before"></div>
+                    <p style="color: #B8C5D1; font-size: 13px; margin: 16px 0 8px 0; padding: 8px; background: rgba(0, 150, 255, 0.1); border-left: 3px solid #0096FF; border-radius: 4px;">
+                        <strong>After 컬렉션:</strong> 아래 쿼리로 "黑王子hight" 플레이어를 확인할 수 있습니다.
+                    </p>
+                    <div class="code-block">
+                        <code>db.game_chat.find({ playerName: "黑王子hight" })</code>
+                    </div>
+                    <button class="execute-btn" onclick="executeFind('game_chat', { playerName: '黑王子hight' }, 'result-scenario4-1-data-after')">After 데이터 확인</button>
+                    <div class="result-box" id="result-scenario4-1-data-after"></div>
+                </div>
+
+                <h3>문제 2: game_hanchat에서 "王子hi" 검색 - 인덱스별 차이</h3>
+                <div class="problem-box">
+                    <p><strong>증상:</strong> <code>game_hanchat</code> 컬렉션에서 "王子hi" (한자+영문)로 검색할 때, 인덱스에 따라 검색 결과가 다릅니다.</p>
+                    <p style="color: #FFC107; font-size: 13px; margin: 12px 0; padding: 8px; background: rgba(255, 193, 7, 0.1); border-left: 3px solid #FFC107; border-radius: 4px;">
+                        <strong>문제 원인:</strong> <code>lucene.korean</code> analyzer는 한글에 최적화되어 있어 한자와 영문 혼합 검색에 부적합합니다. 다국어 검색이 필요한 경우 <code>lucene.standard</code> analyzer를 사용해야 합니다.
+                    </p>
+                </div>
+
+                <div class="solution-box" style="margin-top: 20px;">
+                    <p><strong>⚠️ 사전 준비: game_hanchat 인덱스 생성</strong></p>
+                    <p style="color: #B8C5D1; font-size: 13px; margin: 8px 0;">
+                        <code>game_hanchat</code> 컬렉션에 두 개의 인덱스를 생성해야 합니다:
+                    </p>
+                    <div class="solution-box" style="margin-top: 16px;">
+                        <p><strong>1. ❌ Before 인덱스 (문제 있는 설정):</strong> lucene.korean analyzer</p>
+                        <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">MongoDB Atlas UI에서 Search Index를 생성하세요:</p>
+                        <div class="code-block">
+                            <code>{
+  "mappings": {
+    "dynamic": false,
+    "fields": {
+      "playerName": {
+        "type": "string",
+        "analyzer": "lucene.korean"
+      }
+    }
+  }
+}</code>
+                        </div>
+                        <p style="color: #B8C5D1; font-size: 14px; margin: 12px 0;">
+                            <strong>Index 이름:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">gameHanChatSearchKorean</code>
+                        </p>
+                        <p style="color: #B8C5D1; font-size: 14px; margin: 12px 0;">
+                            <strong>Collection:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_hanchat</code>
+                        </p>
+                    </div>
+                    <div class="solution-box" style="margin-top: 20px;">
+                        <p><strong>2. ✅ After 인덱스 (올바른 설정):</strong> lucene.standard analyzer</p>
+                        <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">MongoDB Atlas UI에서 Search Index를 생성하세요:</p>
+                        <div class="code-block">
+                            <code>{
+  "mappings": {
+    "dynamic": false,
+    "fields": {
+      "playerName": {
+        "type": "string",
+        "analyzer": "lucene.standard"
+      }
+    }
+  }
+}</code>
+                        </div>
+                        <p style="color: #B8C5D1; font-size: 14px; margin: 12px 0;">
+                            <strong>Index 이름:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">gameHanChatSearchMultilingual</code>
+                        </p>
+                        <p style="color: #B8C5D1; font-size: 14px; margin: 12px 0;">
+                            <strong>Collection:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_hanchat</code>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="solution-box" style="margin-top: 20px;">
+                    <p><strong>❌ Before (lucene.korean 인덱스 사용)</strong></p>
+                    <p style="color: #FFC107; font-size: 13px; margin: 8px 0; padding: 8px; background: rgba(255, 193, 7, 0.1); border-left: 3px solid #FFC107; border-radius: 4px;">
+                        <strong>설명:</strong> <code>lucene.korean</code> analyzer는 한글에 최적화되어 있어 한자와 영문 혼합 검색("王子hi")에 부적합합니다. 결과가 없거나 매우 적을 수 있습니다.
+                    </p>
+                    <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">
+                        <strong>컬렉션:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_hanchat</code>
+                    </p>
+                    <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">
+                        <strong>인덱스:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">gameHanChatSearchKorean</code> (lucene.korean analyzer)
+                    </p>
+                    <div class="code-block">
+                        <code>db.game_hanchat.aggregate([
+  {
+    $search: {
+      index: "gameHanChatSearchKorean",
+      text: { 
+        query: "王子hi",
+        path: "playerName"
+      }
+    }
+  },
+  {
+    $addFields: {
+      score: { $meta: "searchScore" }
+    }
+  },
+  {
+    $sort: { score: -1 }
+  }
+])</code>
+                    </div>
+                    <button class="execute-btn" onclick="executeQuery('scenario4-2-before')">Before 쿼리 실행</button>
+                    <div class="result-box" id="result-scenario4-2-before"></div>
+                    
+                    <div class="custom-query-section">
+                        <p style="color: #0096FF; font-size: 13px; margin: 0 0 8px 0; font-weight: 600;">✏️ 쿼리 편집 및 실행</p>
+                        <textarea class="custom-query-textarea" id="custom-query-scenario4-2-before" placeholder="쿼리를 입력하세요...">db.game_hanchat.aggregate([
+  {
+    $search: {
+      index: "gameHanChatSearchKorean",
+      text: { 
+        query: "王子hi",
+        path: "playerName"
+      }
+    }
+  },
+  {
+    $addFields: {
+      score: { $meta: "searchScore" }
+    }
+  },
+  {
+    $sort: { score: -1 }
+  }
+])</textarea>
+                        <button class="edit-query-btn" onclick="executeCustomQuery('scenario4-2-before', 'game_hanchat')">수정된 쿼리 실행</button>
+                        <div class="result-box" id="result-custom-scenario4-2-before" style="margin-top: 12px;"></div>
+                    </div>
+                </div>
+
+                <div class="solution-box" style="margin-top: 20px;">
+                    <p><strong>✅ After (lucene.standard 인덱스 사용)</strong></p>
+                    <p style="color: #00ED64; font-size: 13px; margin: 8px 0; padding: 8px; background: rgba(0, 237, 100, 0.1); border-left: 3px solid #00ED64; border-radius: 4px;">
+                        <strong>해결:</strong> <code>lucene.standard</code> analyzer는 다국어 검색에 적합하여 한자와 영문 혼합 검색("王子hi")이 정상적으로 작동합니다.
+                    </p>
+                    <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">
+                        <strong>컬렉션:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_hanchat</code>
+                    </p>
+                    <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">
+                        <strong>인덱스:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">gameHanChatSearchMultilingual</code> (lucene.standard analyzer)
+                    </p>
+                    <div class="code-block">
+                        <code>db.game_hanchat.aggregate([
+  {
+    $search: {
+      index: "gameHanChatSearchMultilingual",
+      text: { 
+        query: "王子hi",
+        path: "playerName"
+      }
+    }
+  },
+  {
+    $addFields: {
+      score: { $meta: "searchScore" }
+    }
+  },
+  {
+    $sort: { score: -1 }
+  }
+])</code>
+                    </div>
+                    <button class="execute-btn" onclick="executeQuery('scenario4-2-after')">After 쿼리 실행</button>
+                    <div class="result-box" id="result-scenario4-2-after"></div>
+                    
+                    <div class="custom-query-section">
+                        <p style="color: #0096FF; font-size: 13px; margin: 0 0 8px 0; font-weight: 600;">✏️ 쿼리 편집 및 실행</p>
+                        <textarea class="custom-query-textarea" id="custom-query-scenario4-2-after" placeholder="쿼리를 입력하세요...">db.game_hanchat.aggregate([
+  {
+    $search: {
+      index: "gameHanChatSearchMultilingual",
+      text: { 
+        query: "王子hi",
+        path: "playerName"
+      }
+    }
+  },
+  {
+    $addFields: {
+      score: { $meta: "searchScore" }
+    }
+  },
+  {
+    $sort: { score: -1 }
+  }
+])</textarea>
+                        <button class="edit-query-btn" onclick="executeCustomQuery('scenario4-2-after', 'game_hanchat')">수정된 쿼리 실행</button>
+                        <div class="result-box" id="result-custom-scenario4-2-after" style="margin-top: 12px;"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1691,6 +2138,86 @@ db.collection.aggregate([
                         }
                     },
                     { $limit: 10 }
+                ],
+                'scenario4-1-before': [
+                    {
+                        $search: {
+                            index: "gameHanChatSearchKorean",
+                            text: { 
+                                query: "검은왕자",
+                                path: "playerName"
+                            }
+                        }
+                    },
+                    {
+                        $addFields: {
+                            score: { $meta: "searchScore" }
+                        }
+                    },
+                    {
+                        $sort: { score: -1 }
+                    },
+                    { $limit: 10 }
+                ],
+                'scenario4-1-after': [
+                    {
+                        $search: {
+                            index: "gameChatSearchMultilingual",
+                            text: { 
+                                query: "王子hi",
+                                path: "playerName"
+                            }
+                        }
+                    },
+                    {
+                        $addFields: {
+                            score: { $meta: "searchScore" }
+                        }
+                    },
+                    {
+                        $sort: { score: -1 }
+                    },
+                    { $limit: 10 }
+                ],
+                'scenario4-2-before': [
+                    {
+                        $search: {
+                            index: "gameHanChatSearchKorean",
+                            text: { 
+                                query: "王子hi",
+                                path: "playerName"
+                            }
+                        }
+                    },
+                    {
+                        $addFields: {
+                            score: { $meta: "searchScore" }
+                        }
+                    },
+                    {
+                        $sort: { score: -1 }
+                    },
+                    { $limit: 10 }
+                ],
+                'scenario4-2-after': [
+                    {
+                        $search: {
+                            index: "gameHanChatSearchMultilingual",
+                            text: { 
+                                query: "王子hi",
+                                path: "playerName"
+                            }
+                        }
+                    },
+                    {
+                        $addFields: {
+                            score: { $meta: "searchScore" }
+                        }
+                    },
+                    {
+                        $sort: { score: -1 }
+                    },
+                    { $limit: 10 }
                 ]
             };
 
@@ -1753,11 +2280,17 @@ db.collection.aggregate([
             // $searchMeta 쿼리인지 확인
             const isSearchMeta = queryId === 'scenario3-4';
             
-            // 시나리오 3은 bigProducts 컬렉션 사용
+            // 시나리오별 컬렉션 선택
             let collection = 'products';
             if (queryId && queryId.startsWith('scenario3')) {
                 collection = 'bigProducts';
                 console.log('시나리오 3 감지: bigProducts 컬렉션 사용');
+            } else if (queryId === 'scenario4-1-before' || queryId === 'scenario4-2-before' || queryId === 'scenario4-2-after') {
+                collection = 'game_hanchat';
+                console.log('시나리오 4 game_hanchat 감지: game_hanchat 컬렉션 사용');
+            } else if (queryId && queryId.startsWith('scenario4')) {
+                collection = 'game_chat';
+                console.log('시나리오 4 game_chat 감지: game_chat 컬렉션 사용');
             }
             
             console.log('사용할 컬렉션:', collection, 'queryId:', queryId);
@@ -1866,6 +2399,137 @@ db.collection.aggregate([
                             </div>
                             <div class="result-content">
                                 ${autocompleteExplanation}
+                                <div style="margin-top: 16px;">
+                                    <p style="color: #00ED64; font-size: 13px; font-weight: 600; margin-bottom: 8px;">검색 결과:</p>
+                                    <pre style="background: rgba(0, 0, 0, 0.3); padding: 12px; border-radius: 4px; overflow-x: auto; font-size: 12px;">${JSON.stringify(data.result, null, 2)}</pre>
+                                </div>
+                            </div>
+                        `;
+                    } else if (queryId === 'scenario4-1-before') {
+                        // Before 쿼리인 경우 특별한 설명 추가
+                        const indexInfo = data.indexInfo || null;
+                        const koreanIndexInfo = indexInfo?.koreanIndex;
+                        const allIndexes = indexInfo?.allIndexes || [];
+                        const actualAnalyzer = koreanIndexInfo?.analyzer || 'unknown';
+                        
+                        const beforeExplanation = `
+                            <div style="margin-bottom: 20px; padding: 16px; background: rgba(255, 107, 107, 0.1); border: 1px solid rgba(255, 107, 107, 0.3); border-radius: 4px;">
+                                <p style="color: #FF6B6B; font-size: 14px; font-weight: 600; margin-bottom: 12px;">⚠️ Before 쿼리 결과 분석</p>
+                                <p style="color: #B8C5D1; font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
+                                    <strong>사용된 인덱스:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">gameChatSearchKorean</code> (예상: lucene.korean analyzer)
+                                </p>
+                                ${koreanIndexInfo ? `
+                                <p style="color: #B8C5D1; font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
+                                    <strong>인덱스 상태:</strong> ${koreanIndexInfo.status} | <strong>실제 Analyzer:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">${actualAnalyzer}</code>
+                                </p>
+                                ${actualAnalyzer !== 'lucene.korean' ? `
+                                <div style="margin-top: 8px; padding: 8px; background: rgba(255, 107, 107, 0.2); border-left: 3px solid #FF6B6B; border-radius: 4px;">
+                                    <p style="color: #FF6B6B; font-size: 12px; margin: 0; font-weight: 600;">❌ 인덱스 설정 오류:</p>
+                                    <p style="color: #B8C5D1; font-size: 11px; margin: 4px 0 0 0;">
+                                        인덱스의 analyzer가 <code>lucene.korean</code>이 아닙니다 (현재: <code>${actualAnalyzer}</code>). Atlas UI에서 인덱스 설정을 확인하고 analyzer를 <code>lucene.korean</code>으로 변경하세요.
+                                    </p>
+                                </div>
+                                ` : ''}
+                                ` : ''}
+                                ${allIndexes.length > 0 ? `
+                                <p style="color: #B8C5D1; font-size: 12px; line-height: 1.6; margin-bottom: 8px;">
+                                    <strong>현재 존재하는 인덱스:</strong> ${allIndexes.map(idx => `${idx.name} (${idx.status})`).join(', ')}
+                                </p>
+                                ` : ''}
+                                <p style="color: #B8C5D1; font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
+                                    <strong>검색어:</strong> "검은왕자" (순수 한글)
+                                </p>
+                                <p style="color: #B8C5D1; font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
+                                    <strong>예상 결과:</strong> <code>game_hanchat</code> 컬렉션은 순수 한글 데이터를 사용하므로, <code>lucene.korean</code> analyzer가 정상적으로 작동하여 <strong>결과가 나와야 합니다</strong>.
+                                </p>
+                                <p style="color: #00ED64; font-size: 13px; line-height: 1.6; margin-bottom: 12px; font-weight: 600;">
+                                    <strong>실제 결과:</strong> ${data.resultCount}개
+                                </p>
+                                ${data.resultCount > 0 ? `
+                                <div style="margin-top: 12px; padding: 12px; background: rgba(0, 237, 100, 0.1); border-left: 3px solid #00ED64; border-radius: 4px;">
+                                    <p style="color: #00ED64; font-size: 13px; margin: 0; font-weight: 600;">✅ 정상 동작:</p>
+                                    <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0 0 0;">
+                                        <code>game_hanchat</code> 컬렉션(순수 한글 데이터)에서 <code>lucene.korean</code> analyzer를 사용한 검색이 정상적으로 작동하여 ${data.resultCount}개의 결과를 반환했습니다. 이는 예상대로 동작하는 것입니다.
+                                    </p>
+                                    <p style="color: #0096FF; font-size: 12px; margin: 12px 0 0 0; font-weight: 600;">
+                                        💡 이제 After 쿼리를 실행하여 다국어 컬렉션(<code>game_chat</code>)에서 <code>lucene.standard</code> analyzer를 사용한 검색 결과와 비교해보세요.
+                                    </p>
+                                </div>
+                                ` : `
+                                <div style="margin-top: 12px; padding: 12px; background: rgba(255, 193, 7, 0.1); border-left: 3px solid #FFC107; border-radius: 4px;">
+                                    <p style="color: #FFC107; font-size: 13px; margin: 0; font-weight: 600;">⚠️ 주의:</p>
+                                    <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0 0 0;">
+                                        결과가 없습니다. 다음을 확인하세요:
+                                    </p>
+                                    <ul style="margin: 8px 0 0 20px; color: #B8C5D1; font-size: 12px;">
+                                        <li><code>gameHanChatSearchKorean</code> 인덱스가 제대로 생성되었는지 확인</li>
+                                        <li>인덱스의 analyzer가 정확히 <code>lucene.korean</code>인지 확인</li>
+                                        <li>인덱스 상태가 <code>READY</code>인지 확인</li>
+                                        <li>샘플 데이터가 제대로 로드되었는지 확인</li>
+                                    </ul>
+                                </div>
+                                `}
+                            </div>
+                        `;
+                        resultBox.classList.remove('error');
+                        resultBox.classList.add('success', 'show', 'collapsed');
+                        resultBox.innerHTML = `
+                            <div class="result-header" onclick="toggleResultBox(this)">
+                                <span>실행 성공 (${data.executionTime}ms, 결과: ${data.resultCount}개)</span>
+                                <span class="toggle-icon">▼</span>
+                            </div>
+                            <div class="result-content">
+                                ${beforeExplanation}
+                                <div style="margin-top: 16px;">
+                                    <p style="color: #00ED64; font-size: 13px; font-weight: 600; margin-bottom: 8px;">검색 결과:</p>
+                                    <pre style="background: rgba(0, 0, 0, 0.3); padding: 12px; border-radius: 4px; overflow-x: auto; font-size: 12px;">${JSON.stringify(data.result, null, 2)}</pre>
+                                </div>
+                            </div>
+                        `;
+                    } else if (queryId === 'scenario4-1-after') {
+                        // After 쿼리인 경우 특별한 설명 추가
+                        const afterExplanation = `
+                            <div style="margin-bottom: 20px; padding: 16px; background: rgba(0, 237, 100, 0.1); border: 1px solid rgba(0, 237, 100, 0.3); border-radius: 4px;">
+                                <p style="color: #00ED64; font-size: 14px; font-weight: 600; margin-bottom: 12px;">✅ After 쿼리 결과 분석</p>
+                                <p style="color: #B8C5D1; font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
+                                    <strong>사용된 인덱스:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">gameChatSearchMultilingual</code> (lucene.standard analyzer)
+                                </p>
+                                <p style="color: #B8C5D1; font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
+                                    <strong>예상 결과:</strong> <code>lucene.standard</code> analyzer는 한자, 영문, 한글을 모두 처리할 수 있으므로 "王子hi" 검색어가 "黑王子hight"를 정상적으로 매칭합니다.
+                                </p>
+                                <p style="color: #00ED64; font-size: 13px; line-height: 1.6; margin-bottom: 12px; font-weight: 600;">
+                                    <strong>실제 결과:</strong> ${data.resultCount}개
+                                </p>
+                                ${data.resultCount > 0 ? `
+                                <div style="margin-top: 12px; padding: 12px; background: rgba(0, 237, 100, 0.1); border-left: 3px solid #00ED64; border-radius: 4px;">
+                                    <p style="color: #00ED64; font-size: 13px; margin: 0; font-weight: 600;">✅ 정상 동작:</p>
+                                    <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0 0 0;">
+                                        <code>lucene.standard</code> analyzer가 다국어 검색을 정상적으로 처리하여 "黑王子hight" 플레이어를 찾았습니다. Before 쿼리와 비교하여 차이를 확인하세요.
+                                    </p>
+                                </div>
+                                ` : `
+                                <div style="margin-top: 12px; padding: 12px; background: rgba(255, 193, 7, 0.1); border-left: 3px solid #FFC107; border-radius: 4px;">
+                                    <p style="color: #FFC107; font-size: 13px; margin: 0; font-weight: 600;">⚠️ 주의:</p>
+                                    <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0 0 0;">
+                                        결과가 없다면 다음을 확인하세요:<br>
+                                        1. <code>gameChatSearchMultilingual</code> 인덱스가 제대로 생성되었는지 확인<br>
+                                        2. 인덱스의 analyzer가 <code>lucene.standard</code>인지 확인<br>
+                                        3. 인덱스가 READY 상태인지 확인<br>
+                                        4. 샘플 데이터가 제대로 로드되었는지 확인
+                                    </p>
+                                </div>
+                                `}
+                            </div>
+                        `;
+                        resultBox.classList.remove('error');
+                        resultBox.classList.add('success', 'show', 'collapsed');
+                        resultBox.innerHTML = `
+                            <div class="result-header" onclick="toggleResultBox(this)">
+                                <span>실행 성공 (${data.executionTime}ms, 결과: ${data.resultCount}개)</span>
+                                <span class="toggle-icon">▼</span>
+                            </div>
+                            <div class="result-content">
+                                ${afterExplanation}
                                 <div style="margin-top: 16px;">
                                     <p style="color: #00ED64; font-size: 13px; font-weight: 600; margin-bottom: 8px;">검색 결과:</p>
                                     <pre style="background: rgba(0, 0, 0, 0.3); padding: 12px; border-radius: 4px; overflow-x: auto; font-size: 12px;">${JSON.stringify(data.result, null, 2)}</pre>
@@ -2126,7 +2790,7 @@ db.collection.aggregate([
             }
         }
 
-        async function executeFind(collection, query) {
+        async function executeFind(collection, query, resultBoxId = 'result-scenario5-1') {
             // localStorage에서 먼저 읽기
             let connectionString = localStorage.getItem('atlasDemoConnectionString');
             let dbName = localStorage.getItem('atlasDemoDbName');
@@ -2156,7 +2820,13 @@ db.collection.aggregate([
             connectionString = connectionString ? connectionString.trim() : '';
             dbName = dbName ? dbName.trim() : '';
             
-            const resultBox = document.getElementById(`result-scenario5-1`);
+            const resultBox = document.getElementById(resultBoxId);
+            
+            if (!resultBox) {
+                console.error(`❌ [executeFind] 결과 박스를 찾을 수 없습니다: ${resultBoxId}`);
+                alert(`결과 박스를 찾을 수 없습니다: ${resultBoxId}`);
+                return;
+            }
             
             console.log('3. [executeFind] 최종 사용할 연결 정보:', { 
                 connectionStringExists: !!connectionString,
@@ -2848,6 +3518,220 @@ db.collection.aggregate([
             childList: true,
             subtree: true
         });
+
+        // 시나리오 4용 샘플 데이터 로드 함수 (game_chat만 로드)
+        async function loadSampleDataForScenario4() {
+            const resultBox = document.getElementById('result-load-data-scenario4');
+            
+            // localStorage에서 연결 정보 확인
+            let connectionString = localStorage.getItem('atlasDemoConnectionString');
+            let dbName = localStorage.getItem('atlasDemoDbName');
+            
+            const connectionStringInput = document.getElementById('connectionString');
+            const dbNameInput = document.getElementById('dbName');
+            
+            if (!connectionString && connectionStringInput) {
+                connectionString = connectionStringInput.value.trim();
+            }
+            if (!dbName && dbNameInput) {
+                dbName = dbNameInput.value.trim();
+            }
+            
+            connectionString = connectionString ? connectionString.trim() : '';
+            dbName = dbName ? dbName.trim() : '';
+
+            if (!connectionString || !dbName) {
+                showError(resultBox, '연결 정보를 입력하세요.', '상단의 연결 정보 입력 폼에 MongoDB Atlas 연결 문자열과 데이터베이스 이름을 입력해주세요.');
+                return;
+            }
+
+            resultBox.classList.remove('show', 'success', 'error');
+            resultBox.classList.add('show');
+            resultBox.innerHTML = '<div class="result-header">game_chat 샘플 데이터 로딩 중...</div><div class="loading"></div>';
+
+            try {
+                const response = await fetch('/api/load-game-chat-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        connectionString,
+                        dbName
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultBox.classList.remove('error');
+                    resultBox.classList.add('success', 'show', 'collapsed');
+                    
+                    // 경고 메시지 HTML 생성
+                    let warningsHTML = '';
+                    if (data.warnings && data.warnings.length > 0) {
+                        warningsHTML = '<div style="margin-top: 12px; padding: 12px; background: rgba(255, 193, 7, 0.1); border-left: 3px solid #FFC107; border-radius: 4px;">';
+                        warningsHTML += '<p style="color: #FFC107; font-size: 14px; font-weight: 600; margin-bottom: 8px;">⚠️ 경고:</p>';
+                        data.warnings.forEach(warning => {
+                            warningsHTML += `<p style="color: #B8C5D1; font-size: 13px; margin: 4px 0;">${warning}</p>`;
+                        });
+                        warningsHTML += '</div>';
+                    }
+                    
+                    // game_chat 샘플 데이터 HTML 생성
+                    let gameChatHTML = '';
+                    if (data.sampleData && data.sampleData.gameChat && data.sampleData.gameChat.length > 0) {
+                        gameChatHTML = '<div style="margin-top: 12px; padding: 12px; background: rgba(0, 0, 0, 0.2); border-radius: 4px;"><p style="color: #00ED64; margin: 0 0 8px 0; font-size: 13px; font-weight: bold;">📝 game_chat 샘플 데이터 (3개):</p>';
+                        data.sampleData.gameChat.forEach((chat, index) => {
+                            gameChatHTML += `
+                                <div style="margin-bottom: ${index < data.sampleData.gameChat.length - 1 ? '12px' : '0'}; padding-bottom: ${index < data.sampleData.gameChat.length - 1 ? '12px' : '0'}; border-bottom: ${index < data.sampleData.gameChat.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'};">
+                                    <p style="color: #FFFFFF; font-weight: 600; margin-bottom: 4px; font-size: 13px;">플레이어: ${chat.playerName || '이름 없음'}</p>
+                                    <p style="color: #B8C5D1; font-size: 12px; margin: 2px 0;">메시지: ${chat.message || 'N/A'}</p>
+                                    <p style="color: #7A8B99; font-size: 11px; margin: 2px 0;">채널: ${chat.channel || 'N/A'} | 레벨: ${chat.level || 'N/A'}</p>
+                                </div>
+                            `;
+                        });
+                        gameChatHTML += '</div>';
+                    }
+                    
+                    // game_hanchat 샘플 데이터 HTML 생성
+                    let gameHanChatHTML = '';
+                    if (data.sampleData && data.sampleData.gameHanChat && data.sampleData.gameHanChat.length > 0) {
+                        gameHanChatHTML = '<div style="margin-top: 12px; padding: 12px; background: rgba(0, 0, 0, 0.2); border-radius: 4px;"><p style="color: #00ED64; margin: 0 0 8px 0; font-size: 13px; font-weight: bold;">📝 game_hanchat 샘플 데이터 (3개):</p>';
+                        data.sampleData.gameHanChat.forEach((chat, index) => {
+                            gameHanChatHTML += `
+                                <div style="margin-bottom: ${index < data.sampleData.gameHanChat.length - 1 ? '12px' : '0'}; padding-bottom: ${index < data.sampleData.gameHanChat.length - 1 ? '12px' : '0'}; border-bottom: ${index < data.sampleData.gameHanChat.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'};">
+                                    <p style="color: #FFFFFF; font-weight: 600; margin-bottom: 4px; font-size: 13px;">플레이어: ${chat.playerName || '이름 없음'}</p>
+                                    <p style="color: #B8C5D1; font-size: 12px; margin: 2px 0;">메시지: ${chat.message || 'N/A'}</p>
+                                    <p style="color: #7A8B99; font-size: 11px; margin: 2px 0;">채널: ${chat.channel || 'N/A'} | 레벨: ${chat.level || 'N/A'}</p>
+                                </div>
+                            `;
+                        });
+                        gameHanChatHTML += '</div>';
+                    }
+                    
+                    resultBox.innerHTML = `
+                        <div class="result-header" onclick="toggleResultBox(this)">
+                            <span>시나리오 4 샘플 데이터 로딩 완료</span>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="result-content">
+                            <p style="color: #00ED64; margin: 8px 0; font-size: 14px; font-weight: bold;">✅ ${data.message}</p>
+                            ${data.counts ? `
+                                <p style="color: #B8C5D1; margin: 8px 0; font-size: 13px;">
+                                    <strong>로드된 데이터:</strong> game_chat ${data.counts.gameChat || 0}개${data.counts.gameHanChat !== undefined ? `, game_hanchat ${data.counts.gameHanChat || 0}개` : ''}
+                                </p>
+                            ` : ''}
+                            ${warningsHTML}
+                            ${gameChatHTML}
+                            ${gameHanChatHTML}
+                            <p style="color: #B8C5D1; margin: 8px 0; font-size: 13px; margin-top: 12px;">
+                                💡 이제 아래 "사전 준비" 섹션에서 Index를 확인하고 생성한 후 쿼리를 실행할 수 있습니다.
+                            </p>
+                        </div>
+                    `;
+                } else {
+                    showError(resultBox, data.error || '샘플 데이터 로딩 실패', data.hint || '');
+                }
+            } catch (error) {
+                console.error('❌ 샘플 데이터 로딩 중 오류 발생:', error);
+                showError(resultBox, '서버와 통신하는 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        // 커스텀 쿼리 실행 함수
+        async function executeCustomQuery(queryId, defaultCollection) {
+            const textarea = document.getElementById(`custom-query-${queryId}`);
+            const resultBox = document.getElementById(`result-custom-${queryId}`);
+            
+            if (!textarea || !resultBox) {
+                console.error('쿼리 입력 필드나 결과 박스를 찾을 수 없습니다.');
+                return;
+            }
+
+            const queryText = textarea.value.trim();
+            if (!queryText) {
+                showError(resultBox, '쿼리를 입력하세요.');
+                return;
+            }
+
+            // localStorage에서 연결 정보 확인
+            let connectionString = localStorage.getItem('atlasDemoConnectionString');
+            let dbName = localStorage.getItem('atlasDemoDbName');
+            
+            const connectionStringInput = document.getElementById('connectionString');
+            const dbNameInput = document.getElementById('dbName');
+            
+            if (!connectionString && connectionStringInput) {
+                connectionString = connectionStringInput.value.trim();
+            }
+            if (!dbName && dbNameInput) {
+                dbName = dbNameInput.value.trim();
+            }
+            
+            connectionString = connectionString ? connectionString.trim() : '';
+            dbName = dbName ? dbName.trim() : '';
+
+            if (!connectionString || !dbName) {
+                showError(resultBox, '연결 정보를 입력하세요.', '상단의 연결 정보 입력 폼에 MongoDB Atlas 연결 문자열과 데이터베이스 이름을 입력해주세요.');
+                return;
+            }
+
+            // 쿼리에서 컬렉션 이름 추출 (db.collection.aggregate 형식)
+            let collection = defaultCollection;
+            const collectionMatch = queryText.match(/db\.(\w+)\.aggregate/);
+            if (collectionMatch) {
+                collection = collectionMatch[1];
+            }
+
+            // 쿼리 파싱 시도 (간단한 파싱)
+            let parsedQuery;
+            try {
+                // db.collection.aggregate([...]) 형식에서 배열 부분만 추출
+                const arrayMatch = queryText.match(/aggregate\s*\(\s*\[([\s\S]*)\]\s*\)/);
+                if (arrayMatch) {
+                    const arrayContent = arrayMatch[1];
+                    // JavaScript 객체를 JSON으로 변환 시도
+                    parsedQuery = eval(`[${arrayContent}]`);
+                } else {
+                    throw new Error('aggregate 배열을 찾을 수 없습니다.');
+                }
+            } catch (error) {
+                showError(resultBox, '쿼리 파싱 오류', `쿼리 형식이 올바르지 않습니다. db.collection.aggregate([...]) 형식으로 입력하세요.\n\n오류: ${error.message}`);
+                return;
+            }
+
+            resultBox.classList.remove('show', 'success', 'error');
+            resultBox.classList.add('show');
+            resultBox.innerHTML = '<div class="result-header">실행 중...</div><div class="loading"></div>';
+
+            try {
+                const response = await fetch('/api/execute-query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        connectionString,
+                        dbName,
+                        collection: collection,
+                        query: parsedQuery,
+                        queryType: 'aggregate'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(resultBox, data.result, data.executionTime, data.resultCount);
+                } else {
+                    showError(resultBox, data.error || '쿼리 실행 실패', data.hint || '');
+                }
+            } catch (error) {
+                console.error('❌ 커스텀 쿼리 실행 중 오류 발생:', error);
+                showError(resultBox, '서버와 통신하는 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
     </script>
 </body>
 </html>

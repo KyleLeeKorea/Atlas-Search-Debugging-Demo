@@ -2,7 +2,7 @@ import express from 'express';
 import { MongoClient } from 'mongodb';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { sampleProducts, sampleArticles, generateLargeSampleData } from './data/sample-data.js';
+import { sampleProducts, sampleArticles, generateLargeSampleData, generateGameChatData, generateGameHanChatData } from './data/sample-data.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -168,29 +168,278 @@ app.post('/api/load-sample-data', async (req, res) => {
     }
     
     console.log(`시나리오 3용 데이터 삽입 완료 (bigProducts: ${bigProductsInserted}개, bigArticles: ${bigArticlesInserted}개, 총: ${bigProductsInserted + bigArticlesInserted}개)`);
-    console.log(`전체 데이터 삽입 완료 (시나리오 1,2: products ${productsResult.insertedCount}개, articles ${articlesResult.insertedCount}개 / 시나리오 3: bigProducts ${bigProductsInserted}개, bigArticles ${bigArticlesInserted}개)`);
+    
+    // 시나리오 4용 game_chat 다국어 샘플 데이터 생성 및 삽입
+    console.log('시나리오 4용 game_chat 다국어 샘플 데이터 생성 중...');
+    const gameChats = generateGameChatData();
+    console.log(`생성 완료: game_chat ${gameChats.length}건`);
+    
+    const gameChatResult = await db.collection('game_chat').insertMany(gameChats);
+    console.log(`game_chat 데이터 삽입 완료: ${gameChatResult.insertedCount}개`);
+    
+    // 시나리오 4용 game_hanchat 순수 한글 샘플 데이터 생성 및 삽입
+    console.log('='.repeat(60));
+    console.log('시나리오 4용 game_hanchat 순수 한글 샘플 데이터 생성 중...');
+    let gameHanChatResult = { insertedCount: 0 };
+    let gameHanChatError = null;
+    
+    // 함수 존재 여부 확인
+    if (typeof generateGameHanChatData !== 'function') {
+      const errorMsg = 'generateGameHanChatData 함수를 찾을 수 없습니다.';
+      console.error('❌', errorMsg);
+      gameHanChatError = new Error(errorMsg);
+    } else {
+      try {
+        console.log('✅ generateGameHanChatData 함수 확인됨');
+        console.log('generateGameHanChatData 함수 호출 중...');
+        const gameHanChats = generateGameHanChatData();
+        console.log(`✅ 생성 완료: game_hanchat ${gameHanChats.length}건`);
+        if (gameHanChats.length > 0) {
+          console.log(`첫 번째 데이터 샘플:`, JSON.stringify(gameHanChats[0], null, 2));
+        }
+        
+        console.log('game_hanchat 컬렉션에 데이터 삽입 시작...');
+        console.log(`삽입할 데이터 개수: ${gameHanChats.length}개`);
+        gameHanChatResult = await db.collection('game_hanchat').insertMany(gameHanChats);
+        console.log(`✅ game_hanchat 데이터 삽입 완료: ${gameHanChatResult.insertedCount}개`);
+        console.log('='.repeat(60));
+      } catch (err) {
+        gameHanChatError = err;
+        console.error('='.repeat(60));
+        console.error('❌ game_hanchat 데이터 생성/삽입 중 오류 발생!');
+        console.error('❌ 에러 메시지:', err.message);
+        console.error('❌ 에러 타입:', err.constructor.name);
+        console.error('❌ 에러 스택:', err.stack);
+        console.error('='.repeat(60));
+        // 에러가 발생해도 다른 데이터는 계속 진행
+      }
+    }
+    
+    console.log(`전체 데이터 삽입 완료 (시나리오 1,2: products ${productsResult.insertedCount}개, articles ${articlesResult.insertedCount}개 / 시나리오 3: bigProducts ${bigProductsInserted}개, bigArticles ${bigArticlesInserted}개 / 시나리오 4: game_chat ${gameChatResult.insertedCount}개, game_hanchat ${gameHanChatResult.insertedCount}개)`);
 
     // 샘플 데이터 조회 (각 컬렉션에서 3개씩) - 연결 종료 전에 수행
     const sampleProductsData = await db.collection('products').find({}).limit(3).toArray();
     const sampleArticlesData = await db.collection('articles').find({}).limit(3).toArray();
+    const sampleGameChatData = await db.collection('game_chat').find({}).limit(3).toArray();
+    let sampleGameHanChatData = [];
+    try {
+      sampleGameHanChatData = await db.collection('game_hanchat').find({}).limit(3).toArray();
+      console.log(`game_hanchat 샘플 데이터 조회 완료: ${sampleGameHanChatData.length}개`);
+    } catch (gameHanChatFindError) {
+      console.error('❌ game_hanchat 샘플 데이터 조회 중 오류:', gameHanChatFindError.message);
+      console.error('❌ 에러 스택:', gameHanChatFindError.stack);
+      // 에러가 발생해도 빈 배열로 처리
+      sampleGameHanChatData = [];
+    }
 
     // 연결 종료
     await client.close();
 
-    res.json({
+    // 응답 메시지 생성
+    let responseMessage = `샘플 데이터 로딩 완료 (시나리오 1,2: products ${productsResult.insertedCount}개, articles ${articlesResult.insertedCount}개 / 시나리오 3: bigProducts ${bigProductsInserted}개, bigArticles ${bigArticlesInserted}개 / 시나리오 4: game_chat ${gameChatResult.insertedCount}개`;
+    
+    if (gameHanChatResult.insertedCount > 0) {
+      responseMessage += `, game_hanchat ${gameHanChatResult.insertedCount}개`;
+    } else if (gameHanChatError) {
+      responseMessage += `, game_hanchat 생성 실패 (에러: ${gameHanChatError.message})`;
+    } else {
+      responseMessage += `, game_hanchat ${gameHanChatResult.insertedCount}개`;
+    }
+    responseMessage += ').';
+
+    const response = {
       success: true,
-      message: `샘플 데이터 로딩 완료 (시나리오 1,2: products ${productsResult.insertedCount}개, articles ${articlesResult.insertedCount}개 / 시나리오 3: bigProducts ${bigProductsInserted}개, bigArticles ${bigArticlesInserted}개).`,
+      message: responseMessage,
       counts: {
         products: productsResult.insertedCount,
         articles: articlesResult.insertedCount,
         bigProducts: bigProductsInserted,
-        bigArticles: bigArticlesInserted
+        bigArticles: bigArticlesInserted,
+        gameChat: gameChatResult.insertedCount,
+        gameHanChat: gameHanChatResult.insertedCount
       },
       sampleData: {
         products: sampleProductsData,
-        articles: sampleArticlesData
+        articles: sampleArticlesData,
+        gameChat: sampleGameChatData,
+        gameHanChat: sampleGameHanChatData
       }
+    };
+
+    if (gameHanChatError) {
+      response.warnings = [`game_hanchat 데이터 생성 실패: ${gameHanChatError.message}`];
+    }
+
+    res.json(response);
+  } catch (error) {
+    // 연결이 열려있으면 닫기
+    if (client) {
+      try {
+        await client.close();
+      } catch (closeError) {
+        console.error('연결 종료 중 오류:', closeError);
+      }
+    }
+
+    let errorMessage = error.message;
+    let errorHint = '';
+
+    if (error.message.includes('authentication')) {
+      errorHint = '연결 문자열의 사용자 이름과 비밀번호를 확인하세요.';
+    } else if (error.message.includes('network') || error.message.includes('ENOTFOUND')) {
+      errorHint = '네트워크 연결을 확인하고 IP 주소가 Atlas 화이트리스트에 추가되어 있는지 확인하세요.';
+    } else if (error.message.includes('Invalid connection string')) {
+      errorHint = '연결 문자열 형식이 올바른지 확인하세요.';
+    }
+
+    res.status(500).json({
+      success: false,
+      error: errorMessage,
+      hint: errorHint
     });
+  }
+});
+
+// game_chat 컬렉션만 로드하는 API 엔드포인트
+app.post('/api/load-game-chat-data', async (req, res) => {
+  const { connectionString, dbName } = req.body;
+
+  // 입력 검증
+  if (!connectionString || connectionString.trim() === '') {
+    return res.status(400).json({
+      success: false,
+      error: '연결 문자열이 입력되지 않았습니다.'
+    });
+  }
+
+  if (!dbName || dbName.trim() === '') {
+    return res.status(400).json({
+      success: false,
+      error: '데이터베이스 이름이 입력되지 않았습니다.'
+    });
+  }
+
+  let client;
+  try {
+    // MongoDB 클라이언트 생성 및 연결
+    client = new MongoClient(connectionString);
+    await client.connect();
+
+    const db = client.db(dbName);
+    
+    // game_chat 컬렉션 삭제
+    try {
+      await db.collection('game_chat').drop();
+      console.log('기존 game_chat 컬렉션 삭제 완료');
+    } catch (dropError) {
+      if (dropError.message && dropError.message.includes('not found')) {
+        console.log('기존 game_chat 컬렉션이 없습니다. 새로 생성합니다.');
+      } else {
+        console.log(`game_chat 컬렉션 삭제 중 오류 (무시하고 계속 진행): ${dropError.message}`);
+      }
+    }
+
+    // game_hanchat 컬렉션 삭제
+    try {
+      await db.collection('game_hanchat').drop();
+      console.log('기존 game_hanchat 컬렉션 삭제 완료');
+    } catch (dropError) {
+      if (dropError.message && dropError.message.includes('not found')) {
+        console.log('기존 game_hanchat 컬렉션이 없습니다. 새로 생성합니다.');
+      } else {
+        console.log(`game_hanchat 컬렉션 삭제 중 오류 (무시하고 계속 진행): ${dropError.message}`);
+      }
+    }
+
+    // game_chat 샘플 데이터 생성 및 삽입
+    console.log('game_chat 다국어 샘플 데이터 생성 중...');
+    const gameChats = generateGameChatData();
+    console.log(`생성 완료: game_chat ${gameChats.length}건`);
+    
+    const gameChatResult = await db.collection('game_chat').insertMany(gameChats);
+    console.log(`game_chat 데이터 삽입 완료: ${gameChatResult.insertedCount}개`);
+
+    // game_hanchat 샘플 데이터 생성 및 삽입
+    console.log('='.repeat(60));
+    console.log('game_hanchat 순수 한글 샘플 데이터 생성 중...');
+    let gameHanChatResult = { insertedCount: 0 };
+    let gameHanChatError = null;
+    
+    // 함수 존재 여부 확인
+    if (typeof generateGameHanChatData !== 'function') {
+      const errorMsg = 'generateGameHanChatData 함수를 찾을 수 없습니다.';
+      console.error('❌', errorMsg);
+      gameHanChatError = new Error(errorMsg);
+    } else {
+      try {
+        console.log('✅ generateGameHanChatData 함수 확인됨');
+        console.log('generateGameHanChatData 함수 호출 중...');
+        const gameHanChats = generateGameHanChatData();
+        console.log(`✅ 생성 완료: game_hanchat ${gameHanChats.length}건`);
+        if (gameHanChats.length > 0) {
+          console.log(`첫 번째 데이터 샘플:`, JSON.stringify(gameHanChats[0], null, 2));
+        }
+        
+        console.log('game_hanchat 컬렉션에 데이터 삽입 시작...');
+        console.log(`삽입할 데이터 개수: ${gameHanChats.length}개`);
+        gameHanChatResult = await db.collection('game_hanchat').insertMany(gameHanChats);
+        console.log(`✅ game_hanchat 데이터 삽입 완료: ${gameHanChatResult.insertedCount}개`);
+        console.log('='.repeat(60));
+      } catch (err) {
+        gameHanChatError = err;
+        console.error('='.repeat(60));
+        console.error('❌ game_hanchat 데이터 생성/삽입 중 오류 발생!');
+        console.error('❌ 에러 메시지:', err.message);
+        console.error('❌ 에러 타입:', err.constructor.name);
+        console.error('❌ 에러 스택:', err.stack);
+        console.error('='.repeat(60));
+      }
+    }
+
+    // 샘플 데이터 조회 (3개)
+    const sampleGameChatData = await db.collection('game_chat').find({}).limit(3).toArray();
+    let sampleGameHanChatData = [];
+    try {
+      sampleGameHanChatData = await db.collection('game_hanchat').find({}).limit(3).toArray();
+      console.log(`game_hanchat 샘플 데이터 조회 완료: ${sampleGameHanChatData.length}개`);
+    } catch (gameHanChatFindError) {
+      console.error('❌ game_hanchat 샘플 데이터 조회 중 오류:', gameHanChatFindError.message);
+      sampleGameHanChatData = [];
+    }
+
+    // 연결 종료
+    await client.close();
+
+    // 응답 메시지 생성
+    let responseMessage = `시나리오 4 샘플 데이터 로딩 완료 (game_chat ${gameChatResult.insertedCount}개`;
+    
+    if (gameHanChatResult.insertedCount > 0) {
+      responseMessage += `, game_hanchat ${gameHanChatResult.insertedCount}개`;
+    } else if (gameHanChatError) {
+      responseMessage += `, game_hanchat 생성 실패 (에러: ${gameHanChatError.message})`;
+    } else {
+      responseMessage += `, game_hanchat ${gameHanChatResult.insertedCount}개`;
+    }
+    responseMessage += ').';
+
+    const response = {
+      success: true,
+      message: responseMessage,
+      counts: {
+        gameChat: gameChatResult.insertedCount,
+        gameHanChat: gameHanChatResult.insertedCount
+      },
+      sampleData: {
+        gameChat: sampleGameChatData,
+        gameHanChat: sampleGameHanChatData
+      }
+    };
+
+    if (gameHanChatError) {
+      response.warnings = [`game_hanchat 데이터 생성 실패: ${gameHanChatError.message}`];
+    }
+
+    res.json(response);
   } catch (error) {
     // 연결이 열려있으면 닫기
     if (client) {
@@ -620,14 +869,104 @@ app.post('/api/execute-query', async (req, res) => {
 
     let result;
     let executionTime = Date.now();
+    let indexInfo = null; // Before 쿼리 인덱스 정보 (모든 쿼리 타입에서 접근 가능)
 
     if (queryType === 'aggregate') {
       // aggregation pipeline 실행
       console.log('🔍 Aggregation 쿼리 실행 중...');
       console.log('🔍 쿼리:', JSON.stringify(query, null, 2));
       
+      // Before 쿼리인 경우 인덱스 확인 및 정보 수집 (scenario4-1-before, scenario4-2-before)
+      const searchStage = query && query.length > 0 ? query.find(stage => stage.$search) : null;
+      if (searchStage && searchStage.$search && (searchStage.$search.index === 'gameHanChatSearchKorean' || searchStage.$search.index === 'gameChatSearchKorean')) {
+        const indexNameToFind = searchStage.$search.index;
+        console.log(`🔍 Before 쿼리 감지: ${indexNameToFind} 인덱스 확인 중...`);
+        try {
+          // 인덱스 목록 확인
+          let indexes = [];
+          if (typeof coll.getSearchIndexes === 'function') {
+            indexes = await coll.getSearchIndexes().toArray();
+          } else {
+            const indexResult = await db.command({ listSearchIndexes: collection });
+            indexes = indexResult.cursor?.firstBatch || [];
+          }
+          
+          // 인덱스 이름에 따라 적절한 인덱스 찾기
+          const koreanIndex = indexes.find(idx => idx.name === indexNameToFind);
+          const multilingualIndex = collection === 'game_chat' 
+            ? indexes.find(idx => idx.name === 'gameChatSearchMultilingual')
+            : indexes.find(idx => idx.name === 'gameHanChatSearchMultilingual');
+          
+          // 인덱스 정보 수집
+          indexInfo = {
+            exists: !!koreanIndex,
+            allIndexes: indexes.map(idx => ({ name: idx.name, status: idx.status || 'unknown' })),
+            koreanIndex: koreanIndex ? {
+              name: koreanIndex.name,
+              status: koreanIndex.status || 'unknown',
+              analyzer: null
+            } : null,
+            multilingualIndex: multilingualIndex ? {
+              name: multilingualIndex.name,
+              status: multilingualIndex.status || 'unknown'
+            } : null
+          };
+          
+          if (koreanIndex) {
+            // 인덱스의 analyzer 확인
+            const indexDefinition = koreanIndex.latestDefinition || koreanIndex.definition;
+            const playerNameField = indexDefinition?.mappings?.fields?.playerName;
+            const analyzer = playerNameField?.analyzer;
+            indexInfo.koreanIndex.analyzer = analyzer || 'unknown';
+            
+            if (analyzer !== 'lucene.korean') {
+              console.warn(`⚠️ ${indexNameToFind} 인덱스의 analyzer가 'lucene.korean'이 아닙니다: ${analyzer}`);
+            }
+          }
+          
+          if (!koreanIndex) {
+            console.error(`❌ ${indexNameToFind} 인덱스가 없습니다.`);
+            console.error(`현재 존재하는 인덱스: ${indexes.map(idx => idx.name).join(', ')}`);
+            await client.close();
+            return res.status(400).json({
+              success: false,
+              error: `${indexNameToFind} 인덱스가 존재하지 않습니다.`,
+              hint: `Before 쿼리를 실행하려면 '${indexNameToFind}' 인덱스를 먼저 생성해야 합니다.\n\n` +
+                    `현재 존재하는 인덱스: ${indexes.length > 0 ? indexes.map(idx => idx.name).join(', ') : '없음'}\n\n` +
+                    `해결 방법:\n` +
+                    `1. Atlas UI → Search → Create Search Index\n` +
+                    `2. Index 이름: ${indexNameToFind}\n` +
+                    `3. Collection: ${collection}\n` +
+                    `4. JSON Editor 선택 후 아래 JSON 사용:\n` +
+                    `   {\n` +
+                    `     "mappings": {\n` +
+                    `       "dynamic": false,\n` +
+                    `       "fields": {\n` +
+                    `         "playerName": {\n` +
+                    `           "type": "string",\n` +
+                    `           "analyzer": "lucene.korean"\n` +
+                    `         }\n` +
+                    `       }\n` +
+                    `     }\n` +
+                    `   }\n` +
+                    `5. Index가 READY 상태가 되면 다시 쿼리를 실행하세요.\n\n` +
+                    `⚠️ 참고: Before 쿼리는 '${collection}' 컬렉션에서 'lucene.korean' analyzer를 사용합니다.`,
+              indexInfo: indexInfo
+            });
+          }
+        } catch (indexCheckError) {
+          console.error('❌ 인덱스 확인 중 오류:', indexCheckError.message);
+          // 인덱스 확인 실패해도 쿼리는 계속 진행
+        }
+      }
+      
       try {
         result = await coll.aggregate(query).toArray();
+        
+        // Before 쿼리이고 결과가 나온 경우 경고 정보 추가
+        if (searchStage && searchStage.$search && (searchStage.$search.index === 'gameHanChatSearchKorean' || searchStage.$search.index === 'gameChatSearchKorean') && result.length > 0) {
+          console.log(`✅ Before 쿼리에서 ${result.length}개 결과가 반환되었습니다.`);
+        }
       } catch (aggError) {
         console.error('❌ Aggregation 쿼리 실행 중 오류:', aggError.message);
         console.error('❌ Aggregation 오류 스택:', aggError.stack);
@@ -733,12 +1072,19 @@ app.post('/api/execute-query', async (req, res) => {
 
     await client.close();
 
-    res.json({
+    // Before 쿼리인 경우 인덱스 정보도 함께 반환
+    const response = {
       success: true,
       result: result,
       executionTime: executionTime,
       resultCount: Array.isArray(result) ? result.length : result
-    });
+    };
+    
+    if (indexInfo) {
+      response.indexInfo = indexInfo;
+    }
+
+    res.json(response);
 
   } catch (error) {
     if (client) {
