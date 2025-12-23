@@ -198,6 +198,23 @@ app.post('/api/load-sample-data', async (req, res) => {
           console.log(`첫 번째 데이터 샘플:`, JSON.stringify(gameHanChats[0], null, 2));
         }
         
+        // _id 104 데이터 확인
+        const item104 = gameHanChats.find(item => item._id === 104);
+        if (item104) {
+          console.log(`🔍 _id 104 데이터 확인:`, JSON.stringify(item104, null, 2));
+          if (item104.playerName && item104.playerName.includes('王子hi')) {
+            console.error(`❌ 경고: _id 104에 "王子hi"가 포함되어 있습니다!`);
+          }
+        }
+        
+        // "王子hi" 포함 데이터 확인
+        const has王子hi = gameHanChats.filter(item => item.playerName && item.playerName.includes('王子hi'));
+        if (has王子hi.length > 0) {
+          console.error(`❌ 경고: "王子hi"가 포함된 데이터 ${has王子hi.length}건 발견:`, has王子hi.map(item => ({_id: item._id, playerName: item.playerName})));
+        } else {
+          console.log(`✅ "王子hi" 포함 데이터 없음 확인 완료`);
+        }
+        
         console.log('game_hanchat 컬렉션에 데이터 삽입 시작...');
         console.log(`삽입할 데이터 개수: ${gameHanChats.length}개`);
         gameHanChatResult = await db.collection('game_hanchat').insertMany(gameHanChats);
@@ -378,6 +395,23 @@ app.post('/api/load-game-chat-data', async (req, res) => {
         console.log(`✅ 생성 완료: game_hanchat ${gameHanChats.length}건`);
         if (gameHanChats.length > 0) {
           console.log(`첫 번째 데이터 샘플:`, JSON.stringify(gameHanChats[0], null, 2));
+        }
+        
+        // _id 104 데이터 확인
+        const item104 = gameHanChats.find(item => item._id === 104);
+        if (item104) {
+          console.log(`🔍 _id 104 데이터 확인:`, JSON.stringify(item104, null, 2));
+          if (item104.playerName && item104.playerName.includes('王子hi')) {
+            console.error(`❌ 경고: _id 104에 "王子hi"가 포함되어 있습니다!`);
+          }
+        }
+        
+        // "王子hi" 포함 데이터 확인
+        const has王子hi = gameHanChats.filter(item => item.playerName && item.playerName.includes('王子hi'));
+        if (has王子hi.length > 0) {
+          console.error(`❌ 경고: "王子hi"가 포함된 데이터 ${has王子hi.length}건 발견:`, has王子hi.map(item => ({_id: item._id, playerName: item.playerName})));
+        } else {
+          console.log(`✅ "王子hi" 포함 데이터 없음 확인 완료`);
         }
         
         console.log('game_hanchat 컬렉션에 데이터 삽입 시작...');

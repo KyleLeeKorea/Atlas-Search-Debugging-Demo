@@ -1267,15 +1267,18 @@ db.bigProducts.getSearchIndexes()</code>
                     한자, 영문, 한글이 혼합된 다국어 데이터에서 부분 검색이 제대로 작동하지 않는 경우
                 </p>
 
-                <div class="solution-box" style="margin-bottom: 30px; background: rgba(0, 150, 255, 0.1); border: 1px solid rgba(0, 150, 255, 0.3);">
-                    <p><strong>📥 샘플 데이터 로드</strong></p>
-                    <p style="color: #B8C5D1; font-size: 13px; margin: 8px 0;">
-                        시나리오 4를 실행하기 전에 <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_chat</code> 컬렉션과 <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_hanchat</code> 컬렉션에 샘플 데이터를 로드해야 합니다.
+                <div class="solution-box" style="margin-bottom: 30px; margin-top: 20px; background: rgba(0, 237, 100, 0.15); border: 2px solid rgba(0, 237, 100, 0.4);">
+                    <p style="color: #00ED64; font-size: 16px; font-weight: 600; margin-bottom: 12px;">📥 game_chat & game_hanchat 샘플 데이터 로드</p>
+                    <p style="color: #B8C5D1; font-size: 14px; margin: 8px 0; line-height: 1.6;">
+                        시나리오 4를 실행하기 전에 먼저 <code style="background: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 4px; font-weight: 600;">game_chat</code> 컬렉션과 <code style="background: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 4px; font-weight: 600;">game_hanchat</code> 컬렉션에 샘플 데이터를 로드해야 합니다.
                     </p>
-                    <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">
-                        💡 <strong>참고:</strong> 이 버튼을 클릭하면 <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_chat</code> 컬렉션에 다국어 샘플 데이터 100건과 <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_hanchat</code> 컬렉션에 순수 한글 샘플 데이터가 로드됩니다. 기존 컬렉션은 삭제되고 새로 생성됩니다.
+                    <p style="color: #B8C5D1; font-size: 13px; margin: 12px 0 8px 0; padding: 10px; background: rgba(0, 150, 255, 0.1); border-left: 3px solid #0096FF; border-radius: 4px; line-height: 1.6;">
+                        <strong>💡 중요:</strong> 이 버튼을 클릭하면 다음 데이터가 로드됩니다:<br>
+                        • <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_chat</code> 컬렉션: 다국어 샘플 데이터 (한자+영문+한글 혼합)<br>
+                        • <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_hanchat</code> 컬렉션: 순수 한글 샘플 데이터<br>
+                        ⚠️ 기존 컬렉션 데이터는 삭제되고 새로 생성됩니다.
                     </p>
-                    <button class="execute-btn" onclick="loadSampleDataForScenario4()" style="margin-top: 12px;">샘플 데이터 로드</button>
+                    <button class="execute-btn" onclick="loadSampleDataForScenario4()" style="margin-top: 12px; padding: 12px 24px; font-size: 14px; font-weight: 600; background: linear-gradient(135deg, #00ED64 0%, #00C853 100%); border: none; box-shadow: 0 4px 6px rgba(0, 237, 100, 0.3);">game_chat & game_hanchat 데이터 로드</button>
                     <div class="result-box" id="result-load-data-scenario4" style="margin-top: 12px;"></div>
                 </div>
 
@@ -1378,32 +1381,31 @@ db.game_hanchat.getSearchIndexes()</code>
                     </div>
                 </div>
 
-                <h3>문제: 한글 전용 환경 vs 다국어 환경에서의 검색 차이</h3>
-                <div class="problem-box">
-                    <p><strong>증상:</strong> 한글 전용 컬렉션(<code>game_hanchat</code>)에서는 <code>lucene.korean</code> analyzer가 잘 작동하지만, 다국어 컬렉션(<code>game_chat</code>)에서는 한자와 영문 혼합 검색이 제대로 작동하지 않음</p>
-                    <p style="color: #FFC107; font-size: 13px; margin: 12px 0; padding: 8px; background: rgba(255, 193, 7, 0.1); border-left: 3px solid #FFC107; border-radius: 4px;">
-                        <strong>문제 원인:</strong> <code>lucene.korean</code> analyzer는 한글에 최적화되어 있어 한자와 영문 혼합 검색에 부적합합니다. 다국어 환경에서는 <code>lucene.standard</code> analyzer를 사용해야 합니다.
+                <h3>다국어 환경에서의 analyzer 비교</h3>
+                <div class="solution-box">
+                    <p style="color: #0096FF; font-size: 14px; margin: 12px 0; padding: 12px; background: rgba(0, 150, 255, 0.1); border-left: 3px solid #0096FF; border-radius: 4px;">
+                        <strong>설명:</strong> 다국어 컬렉션(<code>game_chat</code>)에서 한자와 영문 혼합 검색 시, <code>lucene.korean</code>과 <code>lucene.standard</code> analyzer의 차이는 검색어와 데이터에 따라 다를 수 있습니다. 실제 환경에서는 두 analyzer 모두 유사한 결과를 보일 수 있으므로, 두 케이스를 비교해보세요.
                     </p>
                 </div>
 
                 <div class="solution-box" style="margin-top: 20px;">
-                    <p><strong>❌ Before (한글 전용 컬렉션 - 정상 동작)</strong></p>
-                    <p style="color: #00ED64; font-size: 13px; margin: 8px 0; padding: 8px; background: rgba(0, 237, 100, 0.1); border-left: 3px solid #00ED64; border-radius: 4px;">
-                        <strong>설명:</strong> <code>game_hanchat</code> 컬렉션은 순수 한글로만 이루어진 데이터를 사용하며, <code>lucene.korean</code> analyzer가 한글 검색에 최적화되어 있어 정상적으로 작동합니다.
+                    <p><strong>📊 Case 1: lucene.korean analyzer 사용</strong></p>
+                    <p style="color: #0096FF; font-size: 13px; margin: 8px 0; padding: 8px; background: rgba(0, 150, 255, 0.1); border-left: 3px solid #0096FF; border-radius: 4px;">
+                        <strong>설명:</strong> <code>game_chat</code> 컬렉션은 한자, 영문, 한글이 혼합된 다국어 데이터를 사용합니다. <code>lucene.korean</code> analyzer는 한글 토크나이징에 최적화되어 있으며, 다국어 검색에서도 효과적일 수 있습니다.
                     </p>
                     <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">
-                        <strong>컬렉션:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_hanchat</code> (순수 한글 데이터)
+                        <strong>컬렉션:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_chat</code> (다국어 데이터)
                     </p>
                     <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">
-                        <strong>인덱스:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">gameHanChatSearchKorean</code> (lucene.korean analyzer)
+                        <strong>인덱스:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">gameChatSearchKorean</code> (lucene.korean analyzer)
                     </p>
                     <div class="code-block">
-                        <code>db.game_hanchat.aggregate([
+                        <code>db.game_chat.aggregate([
   {
     $search: {
-      index: "gameHanChatSearchKorean",
+      index: "gameChatSearchKorean",
       text: { 
-        query: "검은왕자",
+        query: "王子hi",
         path: "playerName"
       }
     }
@@ -1418,14 +1420,39 @@ db.game_hanchat.getSearchIndexes()</code>
   }
 ])</code>
                     </div>
-                    <button class="execute-btn" onclick="executeQuery('scenario4-1-before')">Before 쿼리 실행</button>
+                    <button class="execute-btn" onclick="executeQuery('scenario4-1-before')">Case 1 쿼리 실행</button>
                     <div class="result-box" id="result-scenario4-1-before"></div>
+                    
+                    <div class="custom-query-section">
+                        <p style="color: #0096FF; font-size: 13px; margin: 16px 0 8px 0; font-weight: 600;">✏️ 쿼리 편집 및 실행</p>
+                        <textarea class="custom-query-textarea" id="custom-query-scenario4-1-before" placeholder="쿼리를 입력하세요...">db.game_chat.aggregate([
+  {
+    $search: {
+      index: "gameChatSearchKorean",
+      text: { 
+        query: "王子hi",
+        path: "playerName"
+      }
+    }
+  },
+  {
+    $addFields: {
+      score: { $meta: "searchScore" }
+    }
+  },
+  {
+    $sort: { score: -1 }
+  }
+])</textarea>
+                        <button class="edit-query-btn" onclick="executeCustomQuery('scenario4-1-before', 'game_chat')">수정된 쿼리 실행</button>
+                        <div class="result-box" id="result-custom-scenario4-1-before" style="margin-top: 12px;"></div>
+                    </div>
                 </div>
 
                 <div class="solution-box" style="margin-top: 20px;">
-                    <p><strong>✅ After (다국어 컬렉션 - 해결 방법)</strong></p>
-                    <p style="color: #00ED64; font-size: 13px; margin: 8px 0; padding: 8px; background: rgba(0, 237, 100, 0.1); border-left: 3px solid #00ED64; border-radius: 4px;">
-                        <strong>해결:</strong> <code>game_chat</code> 컬렉션은 한자, 영문, 한글이 혼합된 다국어 데이터를 사용하므로, <code>lucene.standard</code> analyzer를 사용해야 합니다.
+                    <p><strong>📊 Case 2: lucene.standard analyzer 사용</strong></p>
+                    <p style="color: #0096FF; font-size: 13px; margin: 8px 0; padding: 8px; background: rgba(0, 150, 255, 0.1); border-left: 3px solid #0096FF; border-radius: 4px;">
+                        <strong>설명:</strong> <code>game_chat</code> 컬렉션은 한자, 영문, 한글이 혼합된 다국어 데이터를 사용합니다. <code>lucene.standard</code> analyzer는 범용적인 다국어 검색을 지원하며, 한자와 영문 혼합 검색에 적합합니다.
                     </p>
                     <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">
                         <strong>컬렉션:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_chat</code> (다국어 데이터)
@@ -1454,35 +1481,51 @@ db.game_hanchat.getSearchIndexes()</code>
   }
 ])</code>
                     </div>
-                    <button class="execute-btn" onclick="executeQuery('scenario4-1-after')">After 쿼리 실행</button>
+                    <button class="execute-btn" onclick="executeQuery('scenario4-1-after')">Case 2 쿼리 실행</button>
                     <div class="result-box" id="result-scenario4-1-after"></div>
+                    
+                    <div class="custom-query-section">
+                        <p style="color: #0096FF; font-size: 13px; margin: 16px 0 8px 0; font-weight: 600;">✏️ 쿼리 편집 및 실행</p>
+                        <textarea class="custom-query-textarea" id="custom-query-scenario4-1-after" placeholder="쿼리를 입력하세요...">db.game_chat.aggregate([
+  {
+    $search: {
+      index: "gameChatSearchMultilingual",
+      text: { 
+        query: "王子hi",
+        path: "playerName"
+      }
+    }
+  },
+  {
+    $addFields: {
+      score: { $meta: "searchScore" }
+    }
+  },
+  {
+    $sort: { score: -1 }
+  }
+])</textarea>
+                        <button class="edit-query-btn" onclick="executeCustomQuery('scenario4-1-after', 'game_chat')">수정된 쿼리 실행</button>
+                        <div class="result-box" id="result-custom-scenario4-1-after" style="margin-top: 12px;"></div>
+                    </div>
                 </div>
 
                 <div class="solution-box" style="margin-top: 20px;">
                     <p><strong>📝 실제 데이터 예제</strong></p>
                     <p style="color: #B8C5D1; font-size: 13px; margin: 8px 0; padding: 8px; background: rgba(0, 150, 255, 0.1); border-left: 3px solid #0096FF; border-radius: 4px;">
-                        <strong>Before 컬렉션:</strong> 아래 쿼리로 "검은왕자공격" 플레이어를 확인할 수 있습니다.
-                    </p>
-                    <div class="code-block">
-                        <code>db.game_hanchat.find({ playerName: "검은왕자공격" })</code>
-                    </div>
-                    <button class="execute-btn" onclick="executeFind('game_hanchat', { playerName: '검은왕자공격' }, 'result-scenario4-1-data-before')">Before 데이터 확인</button>
-                    <div class="result-box" id="result-scenario4-1-data-before"></div>
-                    <p style="color: #B8C5D1; font-size: 13px; margin: 16px 0 8px 0; padding: 8px; background: rgba(0, 150, 255, 0.1); border-left: 3px solid #0096FF; border-radius: 4px;">
-                        <strong>After 컬렉션:</strong> 아래 쿼리로 "黑王子hight" 플레이어를 확인할 수 있습니다.
+                        <strong>game_chat 컬렉션:</strong> 아래 쿼리로 "黑王子hight" 플레이어를 확인할 수 있습니다. Case 1과 Case 2 모두 동일한 컬렉션을 사용합니다.
                     </p>
                     <div class="code-block">
                         <code>db.game_chat.find({ playerName: "黑王子hight" })</code>
                     </div>
-                    <button class="execute-btn" onclick="executeFind('game_chat', { playerName: '黑王子hight' }, 'result-scenario4-1-data-after')">After 데이터 확인</button>
-                    <div class="result-box" id="result-scenario4-1-data-after"></div>
+                    <button class="execute-btn" onclick="executeFind('game_chat', { playerName: '黑王子hight' }, 'result-scenario4-1-data-before')">데이터 확인</button>
+                    <div class="result-box" id="result-scenario4-1-data-before"></div>
                 </div>
 
-                <h3>문제 2: game_hanchat에서 "王子hi" 검색 - 인덱스별 차이</h3>
-                <div class="problem-box">
-                    <p><strong>증상:</strong> <code>game_hanchat</code> 컬렉션에서 "王子hi" (한자+영문)로 검색할 때, 인덱스에 따라 검색 결과가 다릅니다.</p>
-                    <p style="color: #FFC107; font-size: 13px; margin: 12px 0; padding: 8px; background: rgba(255, 193, 7, 0.1); border-left: 3px solid #FFC107; border-radius: 4px;">
-                        <strong>문제 원인:</strong> <code>lucene.korean</code> analyzer는 한글에 최적화되어 있어 한자와 영문 혼합 검색에 부적합합니다. 다국어 검색이 필요한 경우 <code>lucene.standard</code> analyzer를 사용해야 합니다.
+                <h3>game_hanchat에서 "王子hi" 검색 - analyzer별 비교</h3>
+                <div class="solution-box">
+                    <p style="color: #0096FF; font-size: 14px; margin: 12px 0; padding: 12px; background: rgba(0, 150, 255, 0.1); border-left: 3px solid #0096FF; border-radius: 4px;">
+                        <strong>설명:</strong> <code>game_hanchat</code> 컬렉션은 <strong>순수 한글 데이터만</strong> 포함하고 있습니다. "王子hi" (한자+영문)로 검색하면 <strong>결과가 나오지 않아야 합니다</strong>. 이는 정상적인 동작입니다. analyzer에 따라 검색 동작이 다를 수 있으므로, 두 analyzer 모두 결과가 0건인지 확인해보세요.
                     </p>
                 </div>
 
@@ -1492,7 +1535,7 @@ db.game_hanchat.getSearchIndexes()</code>
                         <code>game_hanchat</code> 컬렉션에 두 개의 인덱스를 생성해야 합니다:
                     </p>
                     <div class="solution-box" style="margin-top: 16px;">
-                        <p><strong>1. ❌ Before 인덱스 (문제 있는 설정):</strong> lucene.korean analyzer</p>
+                        <p><strong>1. Case 1 인덱스:</strong> lucene.korean analyzer</p>
                         <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">MongoDB Atlas UI에서 Search Index를 생성하세요:</p>
                         <div class="code-block">
                             <code>{
@@ -1515,7 +1558,7 @@ db.game_hanchat.getSearchIndexes()</code>
                         </p>
                     </div>
                     <div class="solution-box" style="margin-top: 20px;">
-                        <p><strong>2. ✅ After 인덱스 (올바른 설정):</strong> lucene.standard analyzer</p>
+                        <p><strong>2. Case 2 인덱스:</strong> lucene.standard analyzer</p>
                         <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">MongoDB Atlas UI에서 Search Index를 생성하세요:</p>
                         <div class="code-block">
                             <code>{
@@ -1540,9 +1583,9 @@ db.game_hanchat.getSearchIndexes()</code>
                 </div>
 
                 <div class="solution-box" style="margin-top: 20px;">
-                    <p><strong>❌ Before (lucene.korean 인덱스 사용)</strong></p>
-                    <p style="color: #FFC107; font-size: 13px; margin: 8px 0; padding: 8px; background: rgba(255, 193, 7, 0.1); border-left: 3px solid #FFC107; border-radius: 4px;">
-                        <strong>설명:</strong> <code>lucene.korean</code> analyzer는 한글에 최적화되어 있어 한자와 영문 혼합 검색("王子hi")에 부적합합니다. 결과가 없거나 매우 적을 수 있습니다.
+                    <p><strong>📊 Case 1: lucene.korean analyzer 사용</strong></p>
+                    <p style="color: #0096FF; font-size: 13px; margin: 8px 0; padding: 8px; background: rgba(0, 150, 255, 0.1); border-left: 3px solid #0096FF; border-radius: 4px;">
+                        <strong>설명:</strong> <code>lucene.korean</code> analyzer는 한글 토크나이징에 최적화되어 있습니다. <code>game_hanchat</code> 컬렉션은 순수 한글 데이터만 포함하므로, "王子hi" (한자+영문)로 검색하면 <strong>결과가 나오지 않아야 합니다</strong> (정상 동작).
                     </p>
                     <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">
                         <strong>컬렉션:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_hanchat</code>
@@ -1571,7 +1614,7 @@ db.game_hanchat.getSearchIndexes()</code>
   }
 ])</code>
                     </div>
-                    <button class="execute-btn" onclick="executeQuery('scenario4-2-before')">Before 쿼리 실행</button>
+                    <button class="execute-btn" onclick="executeQuery('scenario4-2-before')">Case 1 쿼리 실행</button>
                     <div class="result-box" id="result-scenario4-2-before"></div>
                     
                     <div class="custom-query-section">
@@ -1601,9 +1644,9 @@ db.game_hanchat.getSearchIndexes()</code>
                 </div>
 
                 <div class="solution-box" style="margin-top: 20px;">
-                    <p><strong>✅ After (lucene.standard 인덱스 사용)</strong></p>
-                    <p style="color: #00ED64; font-size: 13px; margin: 8px 0; padding: 8px; background: rgba(0, 237, 100, 0.1); border-left: 3px solid #00ED64; border-radius: 4px;">
-                        <strong>해결:</strong> <code>lucene.standard</code> analyzer는 다국어 검색에 적합하여 한자와 영문 혼합 검색("王子hi")이 정상적으로 작동합니다.
+                    <p><strong>📊 Case 2: lucene.standard analyzer 사용</strong></p>
+                    <p style="color: #0096FF; font-size: 13px; margin: 8px 0; padding: 8px; background: rgba(0, 150, 255, 0.1); border-left: 3px solid #0096FF; border-radius: 4px;">
+                        <strong>설명:</strong> <code>lucene.standard</code> analyzer는 범용적인 다국어 검색을 지원합니다. 하지만 <code>game_hanchat</code> 컬렉션은 순수 한글 데이터만 포함하므로, "王子hi" (한자+영문)로 검색하면 <strong>결과가 나오지 않아야 합니다</strong> (정상 동작).
                     </p>
                     <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0;">
                         <strong>컬렉션:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">game_hanchat</code>
@@ -1632,7 +1675,7 @@ db.game_hanchat.getSearchIndexes()</code>
   }
 ])</code>
                     </div>
-                    <button class="execute-btn" onclick="executeQuery('scenario4-2-after')">After 쿼리 실행</button>
+                    <button class="execute-btn" onclick="executeQuery('scenario4-2-after')">Case 2 쿼리 실행</button>
                     <div class="result-box" id="result-scenario4-2-after"></div>
                     
                     <div class="custom-query-section">
@@ -2142,9 +2185,9 @@ db.collection.aggregate([
                 'scenario4-1-before': [
                     {
                         $search: {
-                            index: "gameHanChatSearchKorean",
+                            index: "gameChatSearchKorean",
                             text: { 
-                                query: "검은왕자",
+                                query: "王子hi",
                                 path: "playerName"
                             }
                         }
@@ -2285,7 +2328,7 @@ db.collection.aggregate([
             if (queryId && queryId.startsWith('scenario3')) {
                 collection = 'bigProducts';
                 console.log('시나리오 3 감지: bigProducts 컬렉션 사용');
-            } else if (queryId === 'scenario4-1-before' || queryId === 'scenario4-2-before' || queryId === 'scenario4-2-after') {
+            } else if (queryId === 'scenario4-2-before' || queryId === 'scenario4-2-after') {
                 collection = 'game_hanchat';
                 console.log('시나리오 4 game_hanchat 감지: game_hanchat 컬렉션 사용');
             } else if (queryId && queryId.startsWith('scenario4')) {
@@ -2413,8 +2456,8 @@ db.collection.aggregate([
                         const actualAnalyzer = koreanIndexInfo?.analyzer || 'unknown';
                         
                         const beforeExplanation = `
-                            <div style="margin-bottom: 20px; padding: 16px; background: rgba(255, 107, 107, 0.1); border: 1px solid rgba(255, 107, 107, 0.3); border-radius: 4px;">
-                                <p style="color: #FF6B6B; font-size: 14px; font-weight: 600; margin-bottom: 12px;">⚠️ Before 쿼리 결과 분석</p>
+                            <div style="margin-bottom: 20px; padding: 16px; background: rgba(0, 150, 255, 0.1); border: 1px solid rgba(0, 150, 255, 0.3); border-radius: 4px;">
+                                <p style="color: #0096FF; font-size: 14px; font-weight: 600; margin-bottom: 12px;">📊 Case 1 쿼리 결과 분석 (lucene.korean)</p>
                                 <p style="color: #B8C5D1; font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
                                     <strong>사용된 인덱스:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">gameChatSearchKorean</code> (예상: lucene.korean analyzer)
                                 </p>
@@ -2437,22 +2480,22 @@ db.collection.aggregate([
                                 </p>
                                 ` : ''}
                                 <p style="color: #B8C5D1; font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
-                                    <strong>검색어:</strong> "검은왕자" (순수 한글)
+                                    <strong>검색어:</strong> "王子hi" (한자+영문)
                                 </p>
                                 <p style="color: #B8C5D1; font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
-                                    <strong>예상 결과:</strong> <code>game_hanchat</code> 컬렉션은 순수 한글 데이터를 사용하므로, <code>lucene.korean</code> analyzer가 정상적으로 작동하여 <strong>결과가 나와야 합니다</strong>.
+                                    <strong>예상 결과:</strong> <code>game_chat</code> 컬렉션은 다국어 데이터를 사용합니다. <code>lucene.korean</code> analyzer는 한글에 최적화되어 있지만, 다국어 검색 환경에 따라 <code>lucene.standard</code>와 유사한 결과를 보일 수 있습니다.
                                 </p>
                                 <p style="color: #00ED64; font-size: 13px; line-height: 1.6; margin-bottom: 12px; font-weight: 600;">
                                     <strong>실제 결과:</strong> ${data.resultCount}개
                                 </p>
                                 ${data.resultCount > 0 ? `
                                 <div style="margin-top: 12px; padding: 12px; background: rgba(0, 237, 100, 0.1); border-left: 3px solid #00ED64; border-radius: 4px;">
-                                    <p style="color: #00ED64; font-size: 13px; margin: 0; font-weight: 600;">✅ 정상 동작:</p>
+                                    <p style="color: #00ED64; font-size: 13px; margin: 0; font-weight: 600;">✅ 검색 결과:</p>
                                     <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0 0 0;">
-                                        <code>game_hanchat</code> 컬렉션(순수 한글 데이터)에서 <code>lucene.korean</code> analyzer를 사용한 검색이 정상적으로 작동하여 ${data.resultCount}개의 결과를 반환했습니다. 이는 예상대로 동작하는 것입니다.
+                                        <code>game_chat</code> 컬렉션(다국어 데이터)에서 <code>lucene.korean</code> analyzer를 사용한 검색 결과가 ${data.resultCount}개 반환되었습니다. 
                                     </p>
                                     <p style="color: #0096FF; font-size: 12px; margin: 12px 0 0 0; font-weight: 600;">
-                                        💡 이제 After 쿼리를 실행하여 다국어 컬렉션(<code>game_chat</code>)에서 <code>lucene.standard</code> analyzer를 사용한 검색 결과와 비교해보세요.
+                                        💡 이제 Case 2 쿼리를 실행하여 <code>lucene.standard</code> analyzer를 사용한 검색 결과와 비교해보세요. 실제 환경에서는 두 analyzer의 차이가 크지 않을 수 있습니다.
                                     </p>
                                 </div>
                                 ` : `
@@ -2462,7 +2505,7 @@ db.collection.aggregate([
                                         결과가 없습니다. 다음을 확인하세요:
                                     </p>
                                     <ul style="margin: 8px 0 0 20px; color: #B8C5D1; font-size: 12px;">
-                                        <li><code>gameHanChatSearchKorean</code> 인덱스가 제대로 생성되었는지 확인</li>
+                                        <li><code>gameChatSearchKorean</code> 인덱스가 제대로 생성되었는지 확인</li>
                                         <li>인덱스의 analyzer가 정확히 <code>lucene.korean</code>인지 확인</li>
                                         <li>인덱스 상태가 <code>READY</code>인지 확인</li>
                                         <li>샘플 데이터가 제대로 로드되었는지 확인</li>
@@ -2489,22 +2532,22 @@ db.collection.aggregate([
                     } else if (queryId === 'scenario4-1-after') {
                         // After 쿼리인 경우 특별한 설명 추가
                         const afterExplanation = `
-                            <div style="margin-bottom: 20px; padding: 16px; background: rgba(0, 237, 100, 0.1); border: 1px solid rgba(0, 237, 100, 0.3); border-radius: 4px;">
-                                <p style="color: #00ED64; font-size: 14px; font-weight: 600; margin-bottom: 12px;">✅ After 쿼리 결과 분석</p>
+                            <div style="margin-bottom: 20px; padding: 16px; background: rgba(0, 150, 255, 0.1); border: 1px solid rgba(0, 150, 255, 0.3); border-radius: 4px;">
+                                <p style="color: #0096FF; font-size: 14px; font-weight: 600; margin-bottom: 12px;">📊 Case 2 쿼리 결과 분석 (lucene.standard)</p>
                                 <p style="color: #B8C5D1; font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
                                     <strong>사용된 인덱스:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px;">gameChatSearchMultilingual</code> (lucene.standard analyzer)
                                 </p>
                                 <p style="color: #B8C5D1; font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
-                                    <strong>예상 결과:</strong> <code>lucene.standard</code> analyzer는 한자, 영문, 한글을 모두 처리할 수 있으므로 "王子hi" 검색어가 "黑王子hight"를 정상적으로 매칭합니다.
+                                    <strong>예상 결과:</strong> <code>lucene.standard</code> analyzer는 한자, 영문, 한글을 모두 처리할 수 있습니다. 하지만 실제 환경에서는 <code>lucene.korean</code>과 큰 차이가 없을 수 있습니다.
                                 </p>
                                 <p style="color: #00ED64; font-size: 13px; line-height: 1.6; margin-bottom: 12px; font-weight: 600;">
                                     <strong>실제 결과:</strong> ${data.resultCount}개
                                 </p>
                                 ${data.resultCount > 0 ? `
                                 <div style="margin-top: 12px; padding: 12px; background: rgba(0, 237, 100, 0.1); border-left: 3px solid #00ED64; border-radius: 4px;">
-                                    <p style="color: #00ED64; font-size: 13px; margin: 0; font-weight: 600;">✅ 정상 동작:</p>
+                                    <p style="color: #00ED64; font-size: 13px; margin: 0; font-weight: 600;">✅ 검색 결과:</p>
                                     <p style="color: #B8C5D1; font-size: 12px; margin: 8px 0 0 0;">
-                                        <code>lucene.standard</code> analyzer가 다국어 검색을 정상적으로 처리하여 "黑王子hight" 플레이어를 찾았습니다. Before 쿼리와 비교하여 차이를 확인하세요.
+                                        <code>lucene.standard</code> analyzer를 사용한 검색 결과가 ${data.resultCount}개 반환되었습니다. Case 1 쿼리와 비교하여 차이를 확인해보세요. 다국어 검색 환경에서는 두 analyzer 모두 유사한 결과를 보일 수 있습니다.
                                     </p>
                                 </div>
                                 ` : `

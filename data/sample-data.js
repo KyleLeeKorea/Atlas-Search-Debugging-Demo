@@ -346,6 +346,15 @@ export function generateGameChatData() {
       channel: "파티",
       level: 45,
       server: "서버1"
+    },
+    {
+      _id: 119,
+      playerName: "黑王子가hight커",
+      message: "게임을 시작합니다",
+      timestamp: new Date(2024, 11, 18, 13, 30),
+      channel: "일반",
+      level: 55,
+      server: "서버1"
     }
   ];
 
@@ -434,7 +443,7 @@ export function generateGameHanChatData() {
     },
     {
       _id: 104,
-      playerName: "王子hi",
+      playerName: "파란전사치유",
       message: "게임을 시작합니다",
       timestamp: new Date(2024, 11, 18, 12, 15),
       channel: "일반",
@@ -443,7 +452,7 @@ export function generateGameHanChatData() {
     },
     {
       _id: 105,
-      playerName: "王子hello",
+      playerName: "초록도적스킬",
       message: "전투가 시작되었습니다",
       timestamp: new Date(2024, 11, 18, 12, 20),
       channel: "파티",
